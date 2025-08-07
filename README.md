@@ -1,265 +1,420 @@
-# UniSportCard
+# UniSportCard - 대학생 스포츠 중개 플랫폼
 
 대학생들끼리 스포츠를 배우고 가르치는 중개 플랫폼 모바일 앱입니다.
 
-## 🏗️ 프로젝트 구조
+## 🚀 프로젝트 개요
+
+- **프론트엔드**: React Native (Expo) + TypeScript
+- **백엔드**: API 서버 필요 (아직 미구현)
+- **주요 기능**: 수업 등록, 검색, 예약, 리뷰 시스템
+
+## 📱 앱 구조
 
 ```
 src/
-├── components/          # 재사용 가능한 컴포넌트
+├── components/          # 재사용 가능한 UI 컴포넌트
 ├── screens/            # 화면 컴포넌트
-├── services/           # API 서비스 레이어
-├── types/              # TypeScript 타입 정의
-├── utils/              # 유틸리티 함수
-├── hooks/              # 커스텀 훅
-├── constants/          # 상수 정의
-└── navigation/         # 네비게이션 설정
+│   ├── HomeScreen.tsx
+│   ├── LoginScreen.tsx
+│   └── ProfileScreen.tsx
+├── navigation/         # 네비게이션 설정
+├── services/          # API 서비스 레이어
+│   ├── api.ts         # 기본 API 클라이언트
+│   ├── authService.ts # 인증 관련 API
+│   └── lessonService.ts # 수업 관련 API
+├── hooks/             # 커스텀 훅
+│   └── useAuth.ts     # 인증 상태 관리
+├── types/             # TypeScript 타입 정의
+├── constants/         # 상수 정의
+└── utils/             # 유틸리티 함수
 ```
 
-## 🚀 시작하기
+## 🔌 API 명세
 
-### 필수 요구사항
+### Base URL
+```
+https://your-api-domain.com/api
+```
 
-- Node.js 16.0 이상
-- npm 또는 yarn
-- Expo CLI
-- Android Studio (Android 개발용)
-- Xcode (iOS 개발용, macOS 필요)
+### 인증 (Authentication)
 
-### 설치 및 실행
+#### 1. 로그인
+```http
+POST /auth/login
+Content-Type: application/json
 
-1. **의존성 설치**
-   ```bash
-   npm install
-   ```
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
 
-2. **개발 서버 시작**
-   ```bash
-   npm start
-   ```
+**응답:**
+```json
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": "user-123",
+      "name": "김철수",
+      "email": "user@example.com",
+      "university": "서울대학교",
+      "major": "컴퓨터공학과",
+      "grade": 3,
+      "bio": "안녕하세요!",
+      "rating": 4.5,
+      "reviewCount": 10,
+      "createdAt": "2024-01-01T00:00:00Z",
+      "updatedAt": "2024-01-01T00:00:00Z"
+    },
+    "token": "jwt-token-here",
+    "refreshToken": "refresh-token-here"
+  }
+}
+```
 
-3. **플랫폼별 실행**
-   ```bash
-   # Android
-   npm run android
-   
-   # iOS (macOS 필요)
-   npm run ios
-   
-   # 웹
-   npm run web
-   ```
+#### 2. 회원가입
+```http
+POST /auth/register
+Content-Type: application/json
 
-## 📱 주요 기능
+{
+  "name": "김철수",
+  "email": "user@example.com",
+  "password": "password123",
+  "university": "서울대학교",
+  "major": "컴퓨터공학과",
+  "grade": 3,
+  "bio": "안녕하세요!"
+}
+```
 
-### 사용자 기능
-- 회원가입/로그인
-- 프로필 관리
-- 수업 검색 및 필터링
-- 수업 예약
-- 리뷰 작성 및 조회
+#### 3. 로그아웃
+```http
+POST /auth/logout
+Authorization: Bearer {token}
+```
 
-### 강사 기능
-- 수업 생성 및 관리
-- 스케줄 관리
-- 예약 현황 확인
-- 수익 관리
+#### 4. 토큰 갱신
+```http
+POST /auth/refresh
+Content-Type: application/json
 
-## 🛠️ 기술 스택
+{
+  "refreshToken": "refresh-token-here"
+}
+```
 
-- **프레임워크**: React Native (Expo)
-- **언어**: TypeScript
-- **네비게이션**: React Navigation
-- **상태 관리**: React Hooks
-- **스토리지**: AsyncStorage
-- **API 통신**: Fetch API
+#### 5. 프로필 조회
+```http
+GET /auth/profile
+Authorization: Bearer {token}
+```
 
-## 🔧 개발 가이드
+#### 6. 프로필 수정
+```http
+PUT /auth/profile
+Authorization: Bearer {token}
+Content-Type: application/json
 
-### API 연동
+{
+  "name": "김철수",
+  "bio": "수정된 자기소개"
+}
+```
 
-1. **API 엔드포인트 설정**
-   - `src/services/api.ts`에서 `API_BASE_URL` 수정
-   - 팀원이 제공하는 API 도메인으로 변경
+### 수업 (Lessons)
 
-2. **서비스 레이어**
-   - `src/services/` 폴더에 각 기능별 서비스 파일 생성
-   - API 호출 로직은 서비스 레이어에서 관리
+#### 1. 수업 목록 조회
+```http
+GET /lessons?page=1&limit=10&sport=tennis&price_min=10000&price_max=50000
+```
 
-### 컴포넌트 개발
+**응답:**
+```json
+{
+  "success": true,
+  "data": {
+    "lessons": [
+      {
+        "id": "lesson-123",
+        "title": "테니스 기초 레슨",
+        "description": "테니스 기초를 배워보세요",
+        "sport": "tennis",
+        "instructor": {
+          "id": "user-123",
+          "name": "김철수",
+          "rating": 4.5,
+          "reviewCount": 10
+        },
+        "price": 30000,
+        "duration": 60,
+        "maxStudents": 4,
+        "location": "서울대학교 테니스장",
+        "schedule": [
+          {
+            "id": "schedule-123",
+            "date": "2024-01-15",
+            "startTime": "14:00",
+            "endTime": "15:00",
+            "availableSpots": 3
+          }
+        ],
+        "createdAt": "2024-01-01T00:00:00Z",
+        "updatedAt": "2024-01-01T00:00:00Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total": 50,
+      "totalPages": 5
+    }
+  }
+}
+```
 
-1. **새 컴포넌트 생성**
-   ```typescript
-   // src/components/MyComponent.tsx
-   import React from 'react';
-   import { View, Text, StyleSheet } from 'react-native';
-   import { COLORS } from '../constants/colors';
+#### 2. 수업 검색
+```http
+POST /lessons/search
+Content-Type: application/json
 
-   interface MyComponentProps {
-     title: string;
-   }
+{
+  "sport": "tennis",
+  "priceRange": {
+    "min": 10000,
+    "max": 50000
+  },
+  "location": "서울대학교",
+  "date": "2024-01-15",
+  "page": 1,
+  "limit": 10
+}
+```
 
-   export const MyComponent: React.FC<MyComponentProps> = ({ title }) => {
-     return (
-       <View style={styles.container}>
-         <Text style={styles.text}>{title}</Text>
-       </View>
-     );
-   };
+#### 3. 수업 상세 조회
+```http
+GET /lessons/{lessonId}
+```
 
-   const styles = StyleSheet.create({
-     container: {
-       padding: 16,
-       backgroundColor: COLORS.WHITE,
-     },
-     text: {
-       fontSize: 16,
-       color: COLORS.TEXT_PRIMARY,
-     },
-   });
-   ```
+#### 4. 수업 생성
+```http
+POST /lessons
+Authorization: Bearer {token}
+Content-Type: application/json
 
-2. **화면 컴포넌트 생성**
-   ```typescript
-   // src/screens/MyScreen.tsx
-   import React from 'react';
-   import { View, Text, StyleSheet } from 'react-native';
-   import { SafeAreaView } from 'react-native-safe-area-context';
-   import { COLORS } from '../constants/colors';
+{
+  "title": "테니스 기초 레슨",
+  "description": "테니스 기초를 배워보세요",
+  "sport": "tennis",
+  "price": 30000,
+  "duration": 60,
+  "maxStudents": 4,
+  "location": "서울대학교 테니스장",
+  "schedule": [
+    {
+      "date": "2024-01-15",
+      "startTime": "14:00",
+      "endTime": "15:00"
+    }
+  ]
+}
+```
 
-   export const MyScreen: React.FC = () => {
-     return (
-       <SafeAreaView style={styles.container}>
-         <Text style={styles.title}>화면 제목</Text>
-       </SafeAreaView>
-     );
-   };
+#### 5. 수업 수정
+```http
+PUT /lessons/{lessonId}
+Authorization: Bearer {token}
+Content-Type: application/json
 
-   const styles = StyleSheet.create({
-     container: {
-       flex: 1,
-       backgroundColor: COLORS.BACKGROUND,
-     },
-     title: {
-       fontSize: 24,
-       fontWeight: 'bold',
-       color: COLORS.TEXT_PRIMARY,
-       textAlign: 'center',
-       marginTop: 20,
-     },
-   });
-   ```
+{
+  "title": "수정된 제목",
+  "price": 35000
+}
+```
 
-### 네비게이션
+#### 6. 수업 삭제
+```http
+DELETE /lessons/{lessonId}
+Authorization: Bearer {token}
+```
 
-1. **새 화면 추가**
-   - `src/constants/screens.ts`에 화면 이름 추가
-   - `src/navigation/AppNavigator.tsx`에 라우트 추가
+### 예약 (Bookings)
 
-2. **화면 간 이동**
-   ```typescript
-   import { useNavigation } from '@react-navigation/native';
-   import { SCREENS } from '../constants/screens';
+#### 1. 예약 생성
+```http
+POST /bookings
+Authorization: Bearer {token}
+Content-Type: application/json
 
-   const navigation = useNavigation();
-   
-   // 화면 이동
-   navigation.navigate(SCREENS.LESSON_DETAIL, { lessonId: '123' });
-   ```
+{
+  "lessonId": "lesson-123",
+  "scheduleId": "schedule-123"
+}
+```
 
-### 상태 관리
+#### 2. 예약 목록 조회
+```http
+GET /bookings?page=1&limit=10
+Authorization: Bearer {token}
+```
 
-1. **커스텀 훅 사용**
-   ```typescript
-   import { useAuth } from '../hooks/useAuth';
+#### 3. 예약 취소
+```http
+DELETE /bookings/{bookingId}
+Authorization: Bearer {token}
+```
 
-   const { user, login, logout } = useAuth();
-   ```
+### 리뷰 (Reviews)
 
-2. **로컬 상태 관리**
-   ```typescript
-   const [data, setData] = useState<DataType[]>([]);
-   const [loading, setLoading] = useState(false);
-   ```
+#### 1. 리뷰 작성
+```http
+POST /reviews
+Authorization: Bearer {token}
+Content-Type: application/json
 
-## 🎨 디자인 시스템
+{
+  "lessonId": "lesson-123",
+  "rating": 5,
+  "comment": "정말 좋은 수업이었습니다!"
+}
+```
 
-### 색상
-- `src/constants/colors.ts`에서 색상 정의
-- 일관된 색상 사용을 위해 `COLORS` 객체 활용
+#### 2. 리뷰 목록 조회
+```http
+GET /lessons/{lessonId}/reviews?page=1&limit=10
+```
 
-### 스타일링
-- StyleSheet 사용
-- 재사용 가능한 스타일 컴포넌트 생성
-- 반응형 디자인 고려
+## 📊 데이터 모델
 
-## 📋 개발 체크리스트
+### User
+```typescript
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  university: string;
+  major: string;
+  grade: number;
+  bio: string;
+  rating: number;
+  reviewCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+```
 
-### 프론트엔드 개발자
-- [ ] API 엔드포인트 확인 및 연동
-- [ ] 화면별 컴포넌트 구현
-- [ ] 네비게이션 구조 설정
-- [ ] 폼 검증 로직 구현
-- [ ] 에러 처리 및 로딩 상태 관리
-- [ ] 반응형 디자인 적용
+### Lesson
+```typescript
+interface Lesson {
+  id: string;
+  title: string;
+  description: string;
+  sport: string;
+  instructor: User;
+  price: number;
+  duration: number;
+  maxStudents: number;
+  location: string;
+  schedule: LessonSchedule[];
+  createdAt: string;
+  updatedAt: string;
+}
+```
 
-### API 연동
-- [ ] 인증 API 연동
-- [ ] 사용자 관리 API 연동
-- [ ] 수업 관련 API 연동
-- [ ] 예약 관련 API 연동
-- [ ] 리뷰 관련 API 연동
+### LessonSchedule
+```typescript
+interface LessonSchedule {
+  id: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  availableSpots: number;
+}
+```
 
-## 🐛 문제 해결
+### Booking
+```typescript
+interface Booking {
+  id: string;
+  lesson: Lesson;
+  student: User;
+  schedule: LessonSchedule;
+  status: 'confirmed' | 'cancelled' | 'completed';
+  createdAt: string;
+}
+```
 
-### 일반적인 문제들
+### Review
+```typescript
+interface Review {
+  id: string;
+  lesson: Lesson;
+  student: User;
+  rating: number;
+  comment: string;
+  createdAt: string;
+}
+```
 
-1. **Metro 번들러 오류**
-   ```bash
-   npx expo start --clear
-   ```
+## 🔐 인증
 
-2. **의존성 충돌**
-   ```bash
-   rm -rf node_modules package-lock.json
-   npm install
-   ```
+- **JWT 토큰** 기반 인증
+- **Authorization 헤더**에 `Bearer {token}` 형식으로 전송
+- **토큰 만료 시** refresh token으로 갱신
 
-3. **캐시 문제**
-   ```bash
-   npx expo start --clear
-   ```
+## 📝 에러 응답 형식
 
-## 📞 팀 협업
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "이메일 형식이 올바르지 않습니다.",
+    "details": {
+      "email": "올바른 이메일 형식을 입력해주세요."
+    }
+  }
+}
+```
 
-### API 개발자와의 협업
-- API 문서 공유
-- 엔드포인트 테스트
-- 데이터 형식 확인
-- 에러 응답 형식 통일
+## 🚀 개발 환경 설정
 
-### 디자이너와의 협업
-- 피그마 디자인 확인
-- 컴포넌트 구조 논의
-- 반응형 디자인 요구사항 확인
+### 프론트엔드 실행
+```bash
+cd UniSportCard
+npm install
+npx expo start
+```
 
-## 📝 주의사항
+### 환경 변수
+```env
+API_BASE_URL=https://your-api-domain.com/api
+```
 
-1. **타입 안정성**
-   - TypeScript 타입 정의 철저히 하기
-   - API 응답 타입 정의
-   - 컴포넌트 Props 타입 정의
+## 📱 현재 구현된 기능
 
-2. **성능 최적화**
-   - 불필요한 리렌더링 방지
-   - 이미지 최적화
-   - 메모리 누수 방지
+- ✅ 로그인/회원가입 UI
+- ✅ 임시 로그인 (개발용)
+- ✅ 홈 화면
+- ✅ 프로필 화면
+- ✅ 탭 네비게이션
+- ✅ 인증 상태 관리
 
-3. **사용자 경험**
-   - 로딩 상태 표시
-   - 에러 메시지 명확히
-   - 접근성 고려
+## 🔄 백엔드 개발 우선순위
 
-## 📄 라이선스
+1. **인증 API** (로그인, 회원가입, 토큰 관리)
+2. **사용자 관리 API** (프로필 조회/수정)
+3. **수업 관리 API** (CRUD)
+4. **예약 시스템 API**
+5. **리뷰 시스템 API**
 
-이 프로젝트는 팀 프로젝트입니다.
+## 📞 연락처
+
+- **프론트엔드 개발자**: [연락처 정보]
+- **백엔드 개발자**: [연락처 정보]
+- **디자이너**: [연락처 정보]
+
+---
+
+**백엔드 개발자분들, 위 API 명세를 참고하여 개발해주세요!** 🚀
