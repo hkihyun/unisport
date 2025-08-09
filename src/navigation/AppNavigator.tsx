@@ -12,6 +12,7 @@ import { useAuth } from '../hooks/useAuth';
 import { HomeScreen } from '../screens/HomeScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
+import { BookingScreen } from '../screens/BookingScreen';
 
 // 임시 화면 컴포넌트 (아직 만들지 않은 화면들용)
 const TempScreen: React.FC<{ title: string }> = ({ title }) => (
@@ -93,7 +94,7 @@ const MainTabNavigator: React.FC = () => {
       />
       <Tab.Screen
         name={SCREENS.BOOKINGS}
-        component={() => <TempScreen title="예약" />}
+        component={BookingScreen}
         options={{
           title: '내 예약',
           tabBarLabel: '예약',
