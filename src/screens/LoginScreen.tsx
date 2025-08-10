@@ -42,9 +42,9 @@ export const LoginScreen: React.FC = () => {
   };
 
   const socialLogins = [
-    { id: 'kakao', name: '카카오', color: '#FEE500', textColor: '#000', icon: '💬' },
-    { id: 'naver', name: '네이버', color: '#03C75A', textColor: '#fff', icon: 'N' },
-    { id: 'google', name: '구글', color: '#fff', textColor: '#000', icon: 'G' },
+    { id: 'kakao', name: '카카오', color: '#FEE500', textColor: '#000' },
+    { id: 'naver', name: '네이버', color: '#03C75A', textColor: '#fff' },
+    { id: 'google', name: '구글', color: '#fff', textColor: '#000' },
   ];
 
   return (
@@ -57,10 +57,12 @@ export const LoginScreen: React.FC = () => {
           {/* 헤더 */}
           <View style={styles.header}>
             <View style={styles.logoContainer}>
-              <Text style={styles.logoIcon}>🏃‍♂️</Text>
+              <View style={styles.logoIcon}>
+                <Text style={styles.logoText}>US</Text>
+              </View>
               <Text style={styles.title}>UniSportCard</Text>
             </View>
-
+            <Text style={styles.subtitle}>대학생을 위한 스포츠 수업 플랫폼</Text>
           </View>
 
           {/* 탭 선택 */}
@@ -94,6 +96,7 @@ export const LoginScreen: React.FC = () => {
                     value={name}
                     onChangeText={setName}
                     placeholder="실명을 입력하세요"
+                    placeholderTextColor={COLORS.TEXT_MUTED}
                   />
                 </View>
 
@@ -104,6 +107,7 @@ export const LoginScreen: React.FC = () => {
                     value={university}
                     onChangeText={setUniversity}
                     placeholder="소속 대학교를 입력하세요"
+                    placeholderTextColor={COLORS.TEXT_MUTED}
                   />
                 </View>
               </>
@@ -116,6 +120,7 @@ export const LoginScreen: React.FC = () => {
                 value={email}
                 onChangeText={setEmail}
                 placeholder="이메일을 입력하세요"
+                placeholderTextColor={COLORS.TEXT_MUTED}
                 keyboardType="email-address"
                 autoCapitalize="none"
               />
@@ -129,6 +134,7 @@ export const LoginScreen: React.FC = () => {
                   value={password}
                   onChangeText={setPassword}
                   placeholder="비밀번호를 입력하세요"
+                  placeholderTextColor={COLORS.TEXT_MUTED}
                   secureTextEntry={!showPassword}
                 />
                 <TouchableOpacity
@@ -136,7 +142,7 @@ export const LoginScreen: React.FC = () => {
                   onPress={() => setShowPassword(!showPassword)}
                 >
                   <Text style={styles.passwordToggleText}>
-                    {showPassword ? '🙈' : '👁️'}
+                    {showPassword ? '숨김' : '보기'}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -171,9 +177,6 @@ export const LoginScreen: React.FC = () => {
                       key={social.id}
                       style={[styles.socialButton, { backgroundColor: social.color }]}
                     >
-                      <Text style={[styles.socialIcon, { color: social.textColor }]}>
-                        {social.icon}
-                      </Text>
                       <Text style={[styles.socialText, { color: social.textColor }]}>
                         {social.name}
                       </Text>
@@ -213,47 +216,69 @@ const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
     justifyContent: 'center',
-    padding: 20,
+    padding: 24,
     minHeight: '100%',
   },
   header: {
     alignItems: 'center',
-    marginBottom: 30,
+    marginBottom: 40,
   },
   logoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 16,
   },
   logoIcon: {
-    fontSize: 32,
-    marginRight: 10,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: COLORS.PRIMARY,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+    shadowColor: COLORS.SHADOW,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  logoText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: COLORS.WHITE,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: COLORS.PRIMARY,
+    fontSize: 32,
+    fontWeight: '700',
+    color: COLORS.TEXT_PRIMARY,
+    letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 16,
     color: COLORS.TEXT_SECONDARY,
     textAlign: 'center',
+    lineHeight: 24,
   },
   tabContainer: {
     flexDirection: 'row',
     backgroundColor: COLORS.GRAY_100,
-    borderRadius: 25,
+    borderRadius: 16,
     padding: 4,
-    marginBottom: 30,
+    marginBottom: 32,
   },
   tab: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: 14,
     alignItems: 'center',
-    borderRadius: 20,
+    borderRadius: 12,
   },
   activeTab: {
     backgroundColor: COLORS.WHITE,
+    shadowColor: COLORS.SHADOW,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   tabText: {
     fontSize: 16,
@@ -268,27 +293,28 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   inputContainer: {
-    marginBottom: 20,
+    marginBottom: 24,
   },
   label: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
     color: COLORS.TEXT_PRIMARY,
     marginBottom: 8,
   },
   input: {
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: COLORS.BORDER,
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
     backgroundColor: COLORS.WHITE,
+    color: COLORS.TEXT_PRIMARY,
   },
   passwordContainer: {
     position: 'relative',
   },
   passwordInput: {
-    paddingRight: 50,
+    paddingRight: 60,
   },
   passwordToggle: {
     position: 'absolute',
@@ -297,22 +323,30 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   passwordToggleText: {
-    fontSize: 16,
+    fontSize: 14,
+    color: COLORS.PRIMARY,
+    fontWeight: '500',
   },
   forgotPassword: {
     alignItems: 'flex-end',
-    marginBottom: 20,
+    marginBottom: 24,
   },
   forgotPasswordText: {
     color: COLORS.PRIMARY,
     fontSize: 14,
+    fontWeight: '500',
   },
   mainButton: {
     backgroundColor: COLORS.PRIMARY,
-    padding: 16,
+    padding: 18,
     borderRadius: 12,
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
+    shadowColor: COLORS.SHADOW,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
   },
   mainButtonText: {
     color: COLORS.WHITE,
@@ -322,7 +356,7 @@ const styles = StyleSheet.create({
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 20,
+    marginVertical: 24,
   },
   dividerLine: {
     flex: 1,
@@ -330,37 +364,43 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.BORDER,
   },
   dividerText: {
-    marginHorizontal: 15,
+    marginHorizontal: 16,
     color: COLORS.TEXT_SECONDARY,
     fontSize: 14,
+    fontWeight: '500',
   },
   socialContainer: {
-    gap: 10,
-    marginBottom: 20,
+    gap: 12,
+    marginBottom: 24,
   },
   socialButton: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 12,
+    padding: 16,
     borderRadius: 12,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: COLORS.BORDER,
-  },
-  socialIcon: {
-    fontSize: 18,
-    marginRight: 10,
+    shadowColor: COLORS.SHADOW,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   socialText: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   tempLoginButton: {
     backgroundColor: COLORS.SECONDARY,
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
+    shadowColor: COLORS.SHADOW,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   tempLoginButtonText: {
     color: COLORS.WHITE,
@@ -368,8 +408,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   termsContainer: {
-    marginTop: 10,
-    paddingHorizontal: 10,
+    marginTop: 16,
+    paddingHorizontal: 12,
   },
   termsText: {
     fontSize: 12,

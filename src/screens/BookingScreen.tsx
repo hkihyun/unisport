@@ -25,35 +25,72 @@ const mockBookings = [
   },
 ];
 
-// 달력 데이터 (간단한 3월 달력)
-const generateCalendarData = () => {
+// 동적 달력 데이터 생성
+const generateCalendarData = (year: number, month: number) => {
   const calendar = [];
-  const daysInMonth = 31;
-  const firstDayOfWeek = 5; // 3월 1일이 금요일이라고 가정
+  const firstDay = new Date(year, month - 1, 1);
+  const lastDay = new Date(year, month, 0);
+  const firstDayOfWeek = firstDay.getDay();
+  const daysInMonth = lastDay.getDate();
   
-  // 빈 칸 추가
+  // 빈 칸 추가 (이전 달의 마지막 날짜들)
   for (let i = 0; i < firstDayOfWeek; i++) {
-    calendar.push({ day: null, isSelectable: false });
+    calendar.push({ day: null, isSelectable: false, isCurrentMonth: false });
   }
   
-  // 날짜 추가
+  // 현재 달의 날짜 추가
+  const today = new Date();
+  const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month - 1;
+  
   for (let day = 1; day <= daysInMonth; day++) {
+    const isToday = isCurrentMonth && day === today.getDate();
+    const isPast = isCurrentMonth && day < today.getDate();
+    
     calendar.push({ 
       day, 
-      isSelectable: day >= 15, // 15일부터 선택 가능
-      hasBooking: [15, 20].includes(day), // 예약이 있는 날
+      isSelectable: !isPast, // 과거 날짜는 선택 불가
+      hasBooking: [15, 20].includes(day), // 임시 예약 데이터 (나중에 API로 교체)
+      isCurrentMonth: true,
+      isToday,
     });
+  }
+  
+  // 다음 달의 첫 번째 주를 채우기 위한 빈 칸 추가
+  // 각 주가 7일이 되도록 맞춤
+  const totalCells = Math.ceil((firstDayOfWeek + daysInMonth) / 7) * 7;
+  const remainingCells = totalCells - calendar.length;
+  for (let i = 0; i < remainingCells; i++) {
+    calendar.push({ day: null, isSelectable: false, isCurrentMonth: false });
   }
   
   return calendar;
 };
 
-const calendarData = generateCalendarData();
 const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
 
 export const BookingScreen: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<'calendar' | 'list'>('list');
+  const [currentDate, setCurrentDate] = useState(new Date());
+  
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth() + 1;
+  const calendarData = generateCalendarData(currentYear, currentMonth);
+
+  const goToPreviousMonth = () => {
+    setCurrentDate(new Date(currentYear, currentMonth - 2, 1));
+    setSelectedDate(null);
+  };
+
+  const goToNextMonth = () => {
+    setCurrentDate(new Date(currentYear, currentMonth, 1));
+    setSelectedDate(null);
+  };
+
+  const goToCurrentMonth = () => {
+    setCurrentDate(new Date());
+    setSelectedDate(null);
+  };
 
   const getStatusText = (status: string) => {
     switch (status) {
@@ -82,7 +119,7 @@ export const BookingScreen: React.FC = () => {
   };
 
   const renderBookingList = () => (
-    <ScrollView style={styles.bookingList}>
+    <ScrollView style={styles.bookingList} showsVerticalScrollIndicator={false}>
       {mockBookings.map((booking) => (
         <View key={booking.id} style={styles.bookingCard}>
           <View style={styles.bookingHeader}>
@@ -102,7 +139,7 @@ export const BookingScreen: React.FC = () => {
           <Text style={styles.bookingInstructor}>강사: {booking.instructor}</Text>
           <Text style={styles.bookingDate}>{booking.date}</Text>
           <Text style={styles.bookingTime}>{booking.time}</Text>
-          <Text style={styles.bookingLocation}>📍 {booking.location}</Text>
+          <Text style={styles.bookingLocation}>{booking.location}</Text>
           
           <View style={styles.bookingActions}>
             <TouchableOpacity style={styles.actionButton}>
@@ -120,7 +157,18 @@ export const BookingScreen: React.FC = () => {
   const renderCalendar = () => (
     <View style={styles.calendarContainer}>
       <View style={styles.calendarHeader}>
-        <Text style={styles.calendarTitle}>2024년 3월</Text>
+        <Text style={styles.calendarTitle}>{currentYear}년 {currentMonth}월</Text>
+        <View style={styles.calendarNavButtons}>
+          <TouchableOpacity onPress={goToPreviousMonth}>
+            <Text style={styles.navButtonText}>{'<'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={goToCurrentMonth}>
+            <Text style={styles.navButtonText}>현재</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={goToNextMonth}>
+            <Text style={styles.navButtonText}>{'>'}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
       
       <View style={styles.weekDaysContainer}>
@@ -138,6 +186,8 @@ export const BookingScreen: React.FC = () => {
               item.day === selectedDate && styles.selectedDay,
               item.hasBooking && styles.dayWithBooking,
               !item.isSelectable && styles.disabledDay,
+              item.isToday && styles.today,
+              !item.isCurrentMonth && styles.otherMonth,
             ]}
             onPress={() => item.isSelectable && setSelectedDate(item.day)}
             disabled={!item.isSelectable}
@@ -149,6 +199,8 @@ export const BookingScreen: React.FC = () => {
                   item.day === selectedDate && styles.selectedDayText,
                   item.hasBooking && styles.dayWithBookingText,
                   !item.isSelectable && styles.disabledDayText,
+                  item.isToday && styles.todayText,
+                  !item.isCurrentMonth && styles.otherMonthText,
                 ]}
               >
                 {item.day}
@@ -162,7 +214,7 @@ export const BookingScreen: React.FC = () => {
       {selectedDate && (
         <View style={styles.selectedDateInfo}>
           <Text style={styles.selectedDateText}>
-            2024년 3월 {selectedDate}일
+            {currentYear}년 {currentMonth}월 {selectedDate}일
           </Text>
           <View style={styles.timeSlots}>
             <Text style={styles.timeSlotsTitle}>예약 가능한 시간</Text>
@@ -208,19 +260,24 @@ export const BookingScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.BACKGROUND,
+    backgroundColor: COLORS.BACKGROUND_SECONDARY,
   },
   tabContainer: {
     flexDirection: 'row',
     backgroundColor: COLORS.WHITE,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.BORDER,
+    borderBottomColor: COLORS.BORDER_LIGHT,
+    shadowColor: COLORS.SHADOW,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   tab: {
     flex: 1,
-    paddingVertical: 15,
+    paddingVertical: 18,
     alignItems: 'center',
-    borderBottomWidth: 2,
+    borderBottomWidth: 3,
     borderBottomColor: 'transparent',
   },
   activeTab: {
@@ -237,33 +294,44 @@ const styles = StyleSheet.create({
   },
   bookingList: {
     flex: 1,
-    padding: 15,
+    padding: 24,
   },
   bookingCard: {
     backgroundColor: COLORS.WHITE,
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 15,
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
     borderWidth: 1,
-    borderColor: COLORS.BORDER,
+    borderColor: COLORS.BORDER_LIGHT,
+    shadowColor: COLORS.SHADOW,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 3,
   },
   bookingHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 10,
+    marginBottom: 16,
   },
   bookingTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: '700',
     color: COLORS.TEXT_PRIMARY,
     flex: 1,
-    marginRight: 10,
+    marginRight: 16,
+    letterSpacing: -0.3,
   },
   statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    shadowColor: COLORS.SHADOW,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   statusBadgeText: {
     color: COLORS.WHITE,
@@ -271,46 +339,53 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   bookingInstructor: {
-    fontSize: 14,
+    fontSize: 15,
     color: COLORS.TEXT_SECONDARY,
-    marginBottom: 5,
+    marginBottom: 8,
+    lineHeight: 20,
   },
   bookingDate: {
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: 17,
+    fontWeight: '600',
     color: COLORS.TEXT_PRIMARY,
-    marginBottom: 3,
+    marginBottom: 6,
   },
   bookingTime: {
-    fontSize: 14,
+    fontSize: 16,
     color: COLORS.PRIMARY,
-    fontWeight: '500',
-    marginBottom: 5,
+    fontWeight: '600',
+    marginBottom: 8,
   },
   bookingLocation: {
-    fontSize: 14,
+    fontSize: 15,
     color: COLORS.TEXT_SECONDARY,
-    marginBottom: 15,
+    marginBottom: 20,
+    lineHeight: 20,
   },
   bookingActions: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 12,
   },
   actionButton: {
     flex: 1,
-    paddingVertical: 10,
-    borderRadius: 8,
+    paddingVertical: 14,
+    borderRadius: 12,
     alignItems: 'center',
     backgroundColor: COLORS.PRIMARY,
+    shadowColor: COLORS.SHADOW,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   cancelButton: {
-    backgroundColor: COLORS.BACKGROUND,
-    borderWidth: 1,
+    backgroundColor: COLORS.WHITE,
+    borderWidth: 1.5,
     borderColor: COLORS.ERROR,
   },
   actionButtonText: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 15,
+    fontWeight: '600',
     color: COLORS.WHITE,
   },
   cancelButtonText: {
@@ -318,46 +393,81 @@ const styles = StyleSheet.create({
   },
   calendarContainer: {
     flex: 1,
-    padding: 15,
+    padding: 24,
   },
   calendarHeader: {
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
   },
   calendarTitle: {
-    fontSize: 20,
-    fontWeight: '600',
+    fontSize: 22,
+    fontWeight: '700',
     color: COLORS.TEXT_PRIMARY,
+    letterSpacing: -0.3,
+  },
+  calendarNavButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginTop: 16,
+  },
+  navButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.PRIMARY,
   },
   weekDaysContainer: {
     flexDirection: 'row',
-    marginBottom: 10,
+    marginBottom: 16,
+    backgroundColor: COLORS.WHITE,
+    borderRadius: 12,
+    paddingVertical: 12,
+    shadowColor: COLORS.SHADOW,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   weekDayText: {
     flex: 1,
     textAlign: 'center',
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
     color: COLORS.TEXT_SECONDARY,
-    paddingVertical: 10,
+    paddingVertical: 8,
   },
   calendarGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    backgroundColor: COLORS.WHITE,
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: COLORS.SHADOW,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 3,
   },
   calendarDay: {
-    width: '14.28%',
+    width: '14.28%', // 100% / 7 ≈ 14.28%
     aspectRatio: 1,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
+    margin: 0,
+    minWidth: 40, // 최소 너비 보장
   },
   selectedDay: {
     backgroundColor: COLORS.PRIMARY,
     borderRadius: 20,
+    shadowColor: COLORS.SHADOW,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
   },
   dayWithBooking: {
-    backgroundColor: COLORS.BACKGROUND_SECONDARY,
+    backgroundColor: COLORS.PRIMARY_SUBTLE,
     borderRadius: 20,
   },
   disabledDay: {
@@ -366,10 +476,11 @@ const styles = StyleSheet.create({
   calendarDayText: {
     fontSize: 16,
     color: COLORS.TEXT_PRIMARY,
+    fontWeight: '500',
   },
   selectedDayText: {
     color: COLORS.WHITE,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   dayWithBookingText: {
     color: COLORS.PRIMARY,
@@ -378,49 +489,71 @@ const styles = StyleSheet.create({
   disabledDayText: {
     color: COLORS.TEXT_TERTIARY,
   },
+  today: {
+    backgroundColor: COLORS.PRIMARY_SUBTLE,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: COLORS.PRIMARY,
+  },
+  todayText: {
+    color: COLORS.PRIMARY,
+    fontWeight: '700',
+  },
+  otherMonth: {
+    opacity: 0.3,
+  },
+  otherMonthText: {
+    color: COLORS.TEXT_TERTIARY,
+  },
   bookingDot: {
     position: 'absolute',
-    bottom: 5,
-    width: 4,
-    height: 4,
+    bottom: 6,
+    width: 6,
+    height: 6,
     backgroundColor: COLORS.SUCCESS,
-    borderRadius: 2,
+    borderRadius: 3,
   },
   selectedDateInfo: {
-    marginTop: 20,
-    padding: 15,
+    marginTop: 24,
+    padding: 20,
     backgroundColor: COLORS.WHITE,
-    borderRadius: 12,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: COLORS.BORDER,
+    borderColor: COLORS.BORDER_LIGHT,
+    shadowColor: COLORS.SHADOW,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 3,
   },
   selectedDateText: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: '700',
     color: COLORS.TEXT_PRIMARY,
-    marginBottom: 15,
+    marginBottom: 20,
     textAlign: 'center',
+    letterSpacing: -0.3,
   },
   timeSlots: {
-    gap: 10,
+    gap: 12,
   },
   timeSlotsTitle: {
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: 17,
+    fontWeight: '600',
     color: COLORS.TEXT_PRIMARY,
-    marginBottom: 10,
+    marginBottom: 16,
   },
   timeSlot: {
-    padding: 12,
-    backgroundColor: COLORS.BACKGROUND,
-    borderRadius: 8,
-    borderWidth: 1,
+    padding: 16,
+    backgroundColor: COLORS.BACKGROUND_SECONDARY,
+    borderRadius: 12,
+    borderWidth: 1.5,
     borderColor: COLORS.BORDER,
     alignItems: 'center',
   },
   timeSlotText: {
-    fontSize: 14,
+    fontSize: 15,
     color: COLORS.TEXT_PRIMARY,
-    fontWeight: '500',
+    fontWeight: '600',
   },
 });

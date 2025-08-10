@@ -56,31 +56,49 @@ const MainTabNavigator: React.FC = () => {
     <Tab.Navigator
       screenOptions={{
         tabBarActiveTintColor: COLORS.PRIMARY,
-        tabBarInactiveTintColor: COLORS.GRAY_500,
+        tabBarInactiveTintColor: COLORS.TEXT_SECONDARY,
         tabBarStyle: {
           backgroundColor: COLORS.WHITE,
-          borderTopColor: COLORS.BORDER,
+          borderTopColor: COLORS.BORDER_LIGHT,
           borderTopWidth: 1,
-          paddingBottom: 5,
-          paddingTop: 5,
-          height: 60,
+          paddingBottom: 8,
+          paddingTop: 8,
+          height: 70,
+          shadowColor: COLORS.SHADOW,
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.1,
+          shadowRadius: 12,
+          elevation: 8,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '600',
+          marginTop: 4,
         },
         headerStyle: {
           backgroundColor: COLORS.WHITE,
-          borderBottomColor: COLORS.BORDER,
+          borderBottomColor: COLORS.BORDER_LIGHT,
           borderBottomWidth: 1,
+          shadowColor: COLORS.SHADOW,
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.05,
+          shadowRadius: 8,
+          elevation: 2,
         },
         headerTitleStyle: {
           color: COLORS.TEXT_PRIMARY,
-          fontWeight: '600',
+          fontWeight: '700',
+          fontSize: 18,
+          letterSpacing: -0.3,
         },
+        headerTintColor: COLORS.PRIMARY,
       }}
     >
       <Tab.Screen
         name={SCREENS.HOME}
         component={HomeScreen}
         options={{
-          title: '홈',
+          title: '수업 리스트',
           tabBarLabel: '홈',
         }}
       />
@@ -131,12 +149,19 @@ const AppNavigator: React.FC = () => {
         screenOptions={{
           headerStyle: {
             backgroundColor: COLORS.WHITE,
-            borderBottomColor: COLORS.BORDER,
+            borderBottomColor: COLORS.BORDER_LIGHT,
             borderBottomWidth: 1,
+            shadowColor: COLORS.SHADOW,
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.05,
+            shadowRadius: 8,
+            elevation: 2,
           },
           headerTitleStyle: {
             color: COLORS.TEXT_PRIMARY,
-            fontWeight: '600',
+            fontWeight: '700',
+            fontSize: 18,
+            letterSpacing: -0.3,
           },
           headerTintColor: COLORS.PRIMARY,
         }}
@@ -200,7 +225,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.BACKGROUND,
+    backgroundColor: COLORS.BACKGROUND_SECONDARY,
   },
   text: {
     fontSize: 18,
@@ -211,7 +236,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.BACKGROUND,
+    backgroundColor: COLORS.BACKGROUND_SECONDARY,
   },
   loadingText: {
     fontSize: 18,
