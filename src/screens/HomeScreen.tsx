@@ -50,66 +50,73 @@ export const HomeScreen: React.FC = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* 헤더 */}
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>수업 리스트</Text>
-          <View style={styles.headerBadge}>
-            <Text style={styles.headerBadgeText}>{filteredLessons.length}</Text>
+    <View style={styles.container}>
+      <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+        {/* 헤더 */}
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <Text style={styles.headerTitle}>수업 리스트</Text>
+            <View style={styles.headerBadge}>
+              <Text style={styles.headerBadgeText}>{filteredLessons.length}</Text>
+            </View>
+          </View>
+          <Text style={styles.headerSubtitle}>원하는 스포츠 수업을 찾아보세요</Text>
+        </View>
+
+        {/* 검색바 */}
+        <View style={styles.searchContainer}>
+          <View style={styles.searchWrapper}>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="수업 또는 강사를 검색하세요"
+              placeholderTextColor={COLORS.TEXT_MUTED}
+              value={searchText}
+              onChangeText={setSearchText}
+            />
           </View>
         </View>
-        <Text style={styles.headerSubtitle}>원하는 스포츠 수업을 찾아보세요</Text>
-      </View>
 
-      {/* 검색바 */}
-      <View style={styles.searchContainer}>
-        <View style={styles.searchWrapper}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="수업 또는 강사를 검색하세요"
-            placeholderTextColor={COLORS.TEXT_MUTED}
-            value={searchText}
-            onChangeText={setSearchText}
+        {/* 카테고리 필터 */}
+        <View style={styles.categorySection}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryContainer}>
+            {categories.map((category) => (
+              <TouchableOpacity
+                key={category}
+                style={[
+                  styles.categoryButton,
+                  selectedCategory === category && styles.categoryButtonActive
+                ]}
+                onPress={() => setSelectedCategory(category)}
+              >
+                <Text style={[
+                  styles.categoryButtonText,
+                  selectedCategory === category && styles.categoryButtonTextActive
+                ]}>
+                  {category}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* 수업 목록 */}
+        <View style={styles.lessonSection}>
+          <FlatList
+            data={filteredLessons}
+            renderItem={renderLessonCard}
+            keyExtractor={(item) => item.id}
+            style={styles.lessonList}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.lessonListContent}
+            contentInsetAdjustmentBehavior="never"
+            scrollEnabled={false}
           />
         </View>
-      </View>
 
-      {/* 카테고리 필터 */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryContainer}>
-        {categories.map((category) => (
-          <TouchableOpacity
-            key={category}
-            style={[
-              styles.categoryButton,
-              selectedCategory === category && styles.categoryButtonActive
-            ]}
-            onPress={() => setSelectedCategory(category)}
-          >
-            <Text style={[
-              styles.categoryButtonText,
-              selectedCategory === category && styles.categoryButtonTextActive
-            ]}>
-              {category}
-            </Text>
-          </TouchableOpacity>
-        ))}
+        {/* 하단 탭바 공간 */}
+        <View style={styles.bottomTabSpace} />
       </ScrollView>
-
-      {/* 수업 목록 */}
-      <FlatList
-        data={filteredLessons}
-        renderItem={renderLessonCard}
-        keyExtractor={(item) => item.id}
-        style={styles.lessonList}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.lessonListContent}
-        contentInsetAdjustmentBehavior="never"
-      />
-
-      {/* 하단 탭바 공간 */}
-      <View style={styles.bottomTabSpace} />
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -118,13 +125,20 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.BACKGROUND_SECONDARY,
   },
+  scrollContainer: {
+    flex: 1,
+  },
   header: {
     backgroundColor: COLORS.WHITE,
     paddingHorizontal: 24,
-    paddingVertical: 10,
-    marginTop: -45,
+    paddingVertical: 20,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.BORDER_LIGHT,
+    shadowColor: COLORS.SHADOW,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   headerContent: {
     flexDirection: 'row',
@@ -186,50 +200,54 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.TEXT_PRIMARY,
   },
-  categoryContainer: {
+  categorySection: {
     backgroundColor: COLORS.WHITE,
-    paddingVertical: 8,
+    paddingVertical: 16,
     paddingHorizontal: 24,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.BORDER_LIGHT,
+    shadowColor: COLORS.SHADOW,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
+    marginBottom: 0,
+  },
+  categoryContainer: {
+    paddingVertical: 8,
   },
   categoryButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 6,
-    height: 32,
-    marginRight: 12,
-    borderRadius: 16,
     backgroundColor: COLORS.BACKGROUND_SECONDARY,
-    borderWidth: 1.5,
-    borderColor: COLORS.BORDER,
-    justifyContent: 'center',
-    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 24,
+    marginRight: 12,
+    borderWidth: 1,
+    borderColor: COLORS.BORDER_LIGHT,
   },
   categoryButtonActive: {
     backgroundColor: COLORS.PRIMARY,
     borderColor: COLORS.PRIMARY,
-    shadowColor: COLORS.SHADOW,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 2,
   },
   categoryButtonText: {
     fontSize: 14,
+    fontWeight: '600',
     color: COLORS.TEXT_SECONDARY,
-    fontWeight: '500',
   },
   categoryButtonTextActive: {
     color: COLORS.WHITE,
-    fontWeight: '600',
+  },
+  lessonSection: {
+    backgroundColor: COLORS.BACKGROUND_SECONDARY,
+    paddingHorizontal: 24,
+    paddingTop: 20,
+    paddingBottom: 20,
+    marginTop: 0,
   },
   lessonList: {
-    flex: 1,
-    marginTop: -400,
+    backgroundColor: COLORS.BACKGROUND_SECONDARY,
   },
   lessonListContent: {
-    paddingHorizontal: 24,
-    paddingTop: 4,
     paddingBottom: 24,
   },
   lessonCard: {

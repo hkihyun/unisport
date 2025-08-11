@@ -8,8 +8,8 @@ export const AUTH_SCREENS = {
 // 메인 탭 화면
 export const MAIN_TABS = {
   HOME: 'Home',
-  SEARCH: 'Search',
   BOOKINGS: 'Bookings',
+  FAVORITES: 'Favorites',
   PROFILE: 'Profile',
 } as const;
 
@@ -52,12 +52,18 @@ export const LESSON_SCREENS = {
   LESSON_MANAGEMENT: 'LessonManagement',
 } as const;
 
+// 관심수업 관련 화면
+export const FAVORITES_SCREENS = {
+  FAVORITES_MAIN: 'FavoritesMain',
+  FAVORITE_LESSON_DETAIL: 'FavoriteLessonDetail',
+} as const;
+
 // 모든 화면 이름을 하나의 객체로 통합
 export const SCREENS = {
   ...AUTH_SCREENS,
   ...MAIN_TABS,
   ...HOME_SCREENS,
-  ...SEARCH_SCREENS,
+  ...FAVORITES_SCREENS,
   ...BOOKING_SCREENS,
   ...PROFILE_SCREENS,
   ...LESSON_SCREENS,

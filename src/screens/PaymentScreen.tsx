@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '../constants/colors';
 
 // 구독 플랜 데이터
@@ -84,7 +83,7 @@ export const PaymentScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         {/* 헤더 */}
         <View style={styles.header}>
@@ -246,7 +245,7 @@ export const PaymentScreen: React.FC = () => {
 
         <View style={styles.bottomSpace} />
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -518,3 +517,7 @@ const styles = StyleSheet.create({
     height: 20,
   },
 });
+
+
+
+

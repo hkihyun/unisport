@@ -3,7 +3,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { View, Text, StyleSheet, Platform } from 'react-native';
+import { View, Text, StyleSheet, Platform, StatusBar } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { SCREENS } from '../constants/screens';
 import { COLORS } from '../constants/colors';
 import { useAuth } from '../hooks/useAuth';
@@ -14,6 +15,7 @@ import { LoginScreen } from '../screens/LoginScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { BookingScreen } from '../screens/BookingScreen';
 import { PaymentScreen } from '../screens/PaymentScreen';
+import { FavoritesScreen } from '../screens/FavoritesScreen';
 
 // 임시 화면 컴포넌트 (아직 만들지 않은 화면들용)
 const TempScreen: React.FC<{ title: string }> = ({ title }) => (
@@ -27,7 +29,7 @@ type RootStackParamList = {
   [SCREENS.LOGIN]: undefined;
   [SCREENS.REGISTER]: undefined;
   [SCREENS.HOME]: undefined;
-  [SCREENS.SEARCH]: undefined;
+  [SCREENS.FAVORITES]: undefined;
   [SCREENS.BOOKINGS]: undefined;
   [SCREENS.PROFILE]: undefined;
   [SCREENS.LESSON_DETAIL]: { lessonId: string };
@@ -41,7 +43,7 @@ type RootStackParamList = {
 // 탭 네비게이터 타입 정의
 type MainTabParamList = {
   [SCREENS.HOME]: undefined;
-  [SCREENS.SEARCH]: undefined;
+  [SCREENS.FAVORITES]: undefined;
   [SCREENS.BOOKINGS]: undefined;
   [SCREENS.PROFILE]: undefined;
 };
@@ -65,7 +67,7 @@ const MainTabNavigator: React.FC = () => {
           borderTopWidth: 1,
           paddingBottom: 8,
           paddingTop: 8,
-          height: 70,
+          height: 80,
           shadowColor: COLORS.SHADOW,
           shadowOffset: { width: 0, height: -4 },
           shadowOpacity: 0.1,
@@ -105,19 +107,19 @@ const MainTabNavigator: React.FC = () => {
         }}
       />
       <Tab.Screen
-        name={SCREENS.SEARCH}
-        component={() => <TempScreen title="검색" />}
-        options={{
-          title: '수업 검색',
-          tabBarLabel: '검색',
-        }}
-      />
-      <Tab.Screen
         name={SCREENS.BOOKINGS}
         component={BookingScreen}
         options={{
           title: '내 예약',
           tabBarLabel: '예약',
+        }}
+      />
+      <Tab.Screen
+        name={SCREENS.FAVORITES}
+        component={FavoritesScreen}
+        options={{
+          title: '관심수업',
+          tabBarLabel: '관심수업',
         }}
       />
       <Tab.Screen
@@ -146,84 +148,91 @@ const AppNavigator: React.FC = () => {
   }
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator
-        screenOptions={{
-          headerStyle: {
-            backgroundColor: COLORS.WHITE,
-            borderBottomColor: COLORS.BORDER_LIGHT,
-            borderBottomWidth: 1,
-            shadowColor: COLORS.SHADOW,
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.05,
-            shadowRadius: 8,
-            elevation: 2,
-          },
-          headerTitleStyle: {
-            color: COLORS.TEXT_PRIMARY,
-            fontWeight: '700',
-            fontSize: 18,
-            letterSpacing: -0.3,
-          },
-          headerTintColor: COLORS.PRIMARY,
-        }}
-      >
-        {!isAuthenticated ? (
-          // 인증되지 않은 사용자 - 로그인/회원가입 화면
-          <>
-            <Stack.Screen
-              name={SCREENS.LOGIN}
-              component={LoginScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name={SCREENS.REGISTER}
-              component={() => <TempScreen title="회원가입" />}
-              options={{ title: '회원가입' }}
-            />
-          </>
-        ) : (
-          // 인증된 사용자 - 메인 앱 화면
-          <>
-            <Stack.Screen
-              name={SCREENS.HOME}
-              component={MainTabNavigator}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name={SCREENS.LESSON_DETAIL}
-              component={() => <TempScreen title="수업 상세" />}
-              options={{ title: '수업 상세' }}
-            />
-            <Stack.Screen
-              name={SCREENS.INSTRUCTOR_PROFILE}
-              component={() => <TempScreen title="강사 프로필" />}
-              options={{ title: '강사 프로필' }}
-            />
-            <Stack.Screen
-              name={SCREENS.CREATE_LESSON}
-              component={() => <TempScreen title="수업 생성" />}
-              options={{ title: '수업 생성' }}
-            />
-            <Stack.Screen
-              name={SCREENS.EDIT_PROFILE}
-              component={() => <TempScreen title="프로필 수정" />}
-              options={{ title: '프로필 수정' }}
-            />
-            <Stack.Screen
-              name={SCREENS.SETTINGS}
-              component={() => <TempScreen title="설정" />}
-              options={{ title: '설정' }}
-            />
-            <Stack.Screen
-              name={SCREENS.PAYMENT}
-              component={PaymentScreen}
-              options={{ title: '구독 상태' }}
-            />
-          </>
-        )}
-      </Stack.Navigator>
-    </NavigationContainer>
+    <SafeAreaProvider>
+      <StatusBar 
+        barStyle="dark-content"
+        backgroundColor="transparent"
+        translucent={true}
+      />
+      <NavigationContainer>
+        <Stack.Navigator
+          screenOptions={{
+            headerStyle: {
+              backgroundColor: COLORS.WHITE,
+              borderBottomColor: COLORS.BORDER_LIGHT,
+              borderBottomWidth: 1,
+              shadowColor: COLORS.SHADOW,
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.05,
+              shadowRadius: 8,
+              elevation: 2,
+            },
+            headerTitleStyle: {
+              color: COLORS.TEXT_PRIMARY,
+              fontWeight: '700',
+              fontSize: 18,
+              letterSpacing: -0.3,
+            },
+            headerTintColor: COLORS.PRIMARY,
+          }}
+        >
+          {!isAuthenticated ? (
+            // 인증되지 않은 사용자 - 로그인/회원가입 화면
+            <>
+              <Stack.Screen
+                name={SCREENS.LOGIN}
+                component={LoginScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name={SCREENS.REGISTER}
+                component={() => <TempScreen title="회원가입" />}
+                options={{ title: '회원가입' }}
+              />
+            </>
+          ) : (
+            // 인증된 사용자 - 메인 앱 화면
+            <>
+              <Stack.Screen
+                name={SCREENS.HOME}
+                component={MainTabNavigator}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name={SCREENS.LESSON_DETAIL}
+                component={() => <TempScreen title="수업 상세" />}
+                options={{ title: '수업 상세' }}
+              />
+              <Stack.Screen
+                name={SCREENS.INSTRUCTOR_PROFILE}
+                component={() => <TempScreen title="강사 프로필" />}
+                options={{ title: '강사 프로필' }}
+              />
+              <Stack.Screen
+                name={SCREENS.CREATE_LESSON}
+                component={() => <TempScreen title="수업 생성" />}
+                options={{ title: '수업 생성' }}
+              />
+              <Stack.Screen
+                name={SCREENS.EDIT_PROFILE}
+                component={() => <TempScreen title="프로필 수정" />}
+                options={{ title: '프로필 수정' }}
+              />
+              <Stack.Screen
+                name={SCREENS.SETTINGS}
+                component={() => <TempScreen title="설정" />}
+                options={{ title: '설정' }}
+              />
+              <Stack.Screen
+                name={SCREENS.PAYMENT}
+                component={PaymentScreen}
+                options={{ title: '구독 상태' }}
+              />
+            </>
+          )}
+        </Stack.Navigator>
+      </NavigationContainer>
+    </SafeAreaProvider>
   );
 };
 

@@ -48,160 +48,158 @@ export const LoginScreen: React.FC = () => {
   ];
 
   return (
-    <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
-        style={styles.keyboardContainer}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-          {/* 헤더 */}
-          <View style={styles.header}>
-            <View style={styles.logoContainer}>
-              <View style={styles.logoIcon}>
-                <Text style={styles.logoText}>US</Text>
-              </View>
-              <Text style={styles.title}>UniSportCard</Text>
+    <KeyboardAvoidingView 
+      style={styles.container} 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <View style={styles.content}>
+        {/* 헤더 */}
+        <View style={styles.header}>
+          <View style={styles.logoContainer}>
+            <View style={styles.logoIcon}>
+              <Text style={styles.logoText}>US</Text>
             </View>
-            <Text style={styles.subtitle}>대학생을 위한 스포츠 수업 플랫폼</Text>
+            <Text style={styles.title}>UniSportCard</Text>
           </View>
+          <Text style={styles.subtitle}>대학생을 위한 스포츠 수업 플랫폼</Text>
+        </View>
 
-          {/* 탭 선택 */}
-          <View style={styles.tabContainer}>
-            <TouchableOpacity
-              style={[styles.tab, isLoginMode && styles.activeTab]}
-              onPress={() => setIsLoginMode(true)}
-            >
-              <Text style={[styles.tabText, isLoginMode && styles.activeTabText]}>
-                로그인
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.tab, !isLoginMode && styles.activeTab]}
-              onPress={() => setIsLoginMode(false)}
-            >
-              <Text style={[styles.tabText, !isLoginMode && styles.activeTabText]}>
-                회원가입
-              </Text>
-            </TouchableOpacity>
-          </View>
+        {/* 탭 선택 */}
+        <View style={styles.tabContainer}>
+          <TouchableOpacity
+            style={[styles.tab, isLoginMode && styles.activeTab]}
+            onPress={() => setIsLoginMode(true)}
+          >
+            <Text style={[styles.tabText, isLoginMode && styles.activeTabText]}>
+              로그인
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, !isLoginMode && styles.activeTab]}
+            onPress={() => setIsLoginMode(false)}
+          >
+            <Text style={[styles.tabText, !isLoginMode && styles.activeTabText]}>
+              회원가입
+            </Text>
+          </TouchableOpacity>
+        </View>
 
-          {/* 폼 */}
-          <View style={styles.form}>
-            {!isLoginMode && (
-              <>
-                <View style={styles.inputContainer}>
-                  <Text style={styles.label}>이름</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={name}
-                    onChangeText={setName}
-                    placeholder="실명을 입력하세요"
-                    placeholderTextColor={COLORS.TEXT_MUTED}
-                  />
-                </View>
-
-                <View style={styles.inputContainer}>
-                  <Text style={styles.label}>대학교</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={university}
-                    onChangeText={setUniversity}
-                    placeholder="소속 대학교를 입력하세요"
-                    placeholderTextColor={COLORS.TEXT_MUTED}
-                  />
-                </View>
-              </>
-            )}
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>이메일</Text>
-              <TextInput
-                style={styles.input}
-                value={email}
-                onChangeText={setEmail}
-                placeholder="이메일을 입력하세요"
-                placeholderTextColor={COLORS.TEXT_MUTED}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>비밀번호</Text>
-              <View style={styles.passwordContainer}>
+        {/* 폼 */}
+        <View style={styles.form}>
+          {!isLoginMode && (
+            <>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>이름</Text>
                 <TextInput
-                  style={[styles.input, styles.passwordInput]}
-                  value={password}
-                  onChangeText={setPassword}
-                  placeholder="비밀번호를 입력하세요"
+                  style={styles.input}
+                  value={name}
+                  onChangeText={setName}
+                  placeholder="실명을 입력하세요"
                   placeholderTextColor={COLORS.TEXT_MUTED}
-                  secureTextEntry={!showPassword}
                 />
-                <TouchableOpacity
-                  style={styles.passwordToggle}
-                  onPress={() => setShowPassword(!showPassword)}
-                >
-                  <Text style={styles.passwordToggleText}>
-                    {showPassword ? '숨김' : '보기'}
-                  </Text>
-                </TouchableOpacity>
               </View>
-            </View>
 
-            {isLoginMode && (
-              <TouchableOpacity style={styles.forgotPassword}>
-                <Text style={styles.forgotPasswordText}>비밀번호를 잊으셨나요?</Text>
-              </TouchableOpacity>
-            )}
-
-            <TouchableOpacity
-              style={styles.mainButton}
-              onPress={isLoginMode ? handleLogin : handleRegister}
-            >
-              <Text style={styles.mainButtonText}>
-                {isLoginMode ? '로그인' : '회원가입'}
-              </Text>
-            </TouchableOpacity>
-
-            {isLoginMode && (
-              <>
-                <View style={styles.divider}>
-                  <View style={styles.dividerLine} />
-                  <Text style={styles.dividerText}>또는</Text>
-                  <View style={styles.dividerLine} />
-                </View>
-
-                <View style={styles.socialContainer}>
-                  {socialLogins.map((social) => (
-                    <TouchableOpacity
-                      key={social.id}
-                      style={[styles.socialButton, { backgroundColor: social.color }]}
-                    >
-                      <Text style={[styles.socialText, { color: social.textColor }]}>
-                        {social.name}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </>
-            )}
-
-            <TouchableOpacity style={styles.tempLoginButton} onPress={handleTempLogin}>
-              <Text style={styles.tempLoginButtonText}>개발용 로그인</Text>
-            </TouchableOpacity>
-
-            {!isLoginMode && (
-              <View style={styles.termsContainer}>
-                <Text style={styles.termsText}>
-                  가입시 <Text style={styles.termsLink}>이용약관</Text>과{' '}
-                  <Text style={styles.termsLink}>개인정보처리방침</Text>에 동의하는 것으로 간주됩니다.
-                </Text>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>대학교</Text>
+                <TextInput
+                  style={styles.input}
+                  value={university}
+                  onChangeText={setUniversity}
+                  placeholder="소속 대학교를 입력하세요"
+                  placeholderTextColor={COLORS.TEXT_MUTED}
+                />
               </View>
-            )}
+            </>
+          )}
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>이메일</Text>
+            <TextInput
+              style={styles.input}
+              value={email}
+              onChangeText={setEmail}
+              placeholder="이메일을 입력하세요"
+              placeholderTextColor={COLORS.TEXT_MUTED}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
           </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>비밀번호</Text>
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={[styles.input, styles.passwordInput]}
+                value={password}
+                onChangeText={setPassword}
+                placeholder="비밀번호를 입력하세요"
+                placeholderTextColor={COLORS.TEXT_MUTED}
+                secureTextEntry={!showPassword}
+              />
+              <TouchableOpacity
+                style={styles.passwordToggle}
+                onPress={() => setShowPassword(!showPassword)}
+              >
+                <Text style={styles.passwordToggleText}>
+                  {showPassword ? '숨김' : '보기'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {isLoginMode && (
+            <TouchableOpacity style={styles.forgotPassword}>
+              <Text style={styles.forgotPasswordText}>비밀번호를 잊으셨나요?</Text>
+            </TouchableOpacity>
+          )}
+
+          <TouchableOpacity
+            style={styles.mainButton}
+            onPress={isLoginMode ? handleLogin : handleRegister}
+          >
+            <Text style={styles.mainButtonText}>
+              {isLoginMode ? '로그인' : '회원가입'}
+            </Text>
+          </TouchableOpacity>
+
+          {isLoginMode && (
+            <>
+              <View style={styles.divider}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>또는</Text>
+                <View style={styles.dividerLine} />
+              </View>
+
+              <View style={styles.socialContainer}>
+                {socialLogins.map((social) => (
+                  <TouchableOpacity
+                    key={social.id}
+                    style={[styles.socialButton, { backgroundColor: social.color }]}
+                  >
+                    <Text style={[styles.socialText, { color: social.textColor }]}>
+                      {social.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </>
+          )}
+
+          <TouchableOpacity style={styles.tempLoginButton} onPress={handleTempLogin}>
+            <Text style={styles.tempLoginButtonText}>개발용 로그인</Text>
+          </TouchableOpacity>
+
+          {!isLoginMode && (
+            <View style={styles.termsContainer}>
+              <Text style={styles.termsText}>
+                가입시 <Text style={styles.termsLink}>이용약관</Text>과{' '}
+                <Text style={styles.termsLink}>개인정보처리방침</Text>에 동의하는 것으로 간주됩니다.
+              </Text>
+            </View>
+          )}
+        </View>
+      </View>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -210,11 +208,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.BACKGROUND,
   },
-  keyboardContainer: {
+  content: {
     flex: 1,
-  },
-  scrollContainer: {
-    flexGrow: 1,
     justifyContent: 'center',
     padding: 24,
     minHeight: '100%',

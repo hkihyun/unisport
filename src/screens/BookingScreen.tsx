@@ -230,7 +230,7 @@ export const BookingScreen: React.FC = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       {/* 탭 헤더 */}
       <View style={styles.tabContainer}>
         <TouchableOpacity
@@ -253,7 +253,7 @@ export const BookingScreen: React.FC = () => {
 
       {/* 컨텐츠 */}
       {activeTab === 'list' ? renderBookingList() : renderCalendar()}
-    </SafeAreaView>
+    </View>
   );
 };
 
