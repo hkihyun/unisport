@@ -54,10 +54,10 @@ const subscriptionPlans = [
 ];
 
 const paymentMethods = [
-  { id: 'card', name: '신용/체크카드', icon: '💳', description: '간편하고 안전한 카드 결제' },
-  { id: 'kakao', name: '카카오페이', icon: '💛', description: '카카오톡으로 간편 결제' },
-  { id: 'naver', name: '네이버페이', icon: '💚', description: '네이버 아이디로 결제' },
-  { id: 'toss', name: '토스', icon: '💙', description: '토스 앱으로 빠른 결제' },
+  { id: 'card', name: '신용/체크카드', icon: '', description: '간편하고 안전한 카드 결제' },
+  { id: 'kakao', name: '카카오페이', icon: '', description: '카카오톡으로 간편 결제' },
+  { id: 'naver', name: '네이버페이', icon: '', description: '네이버 아이디로 결제' },
+  { id: 'toss', name: '토스', icon: '', description: '토스 앱으로 빠른 결제' },
 ];
 
 export const PaymentScreen: React.FC = () => {
@@ -88,20 +88,20 @@ export const PaymentScreen: React.FC = () => {
       <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         {/* 헤더 */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Premium 구독</Text>
+          <Text style={styles.headerTitle}>구독 상태</Text>
           <Text style={styles.headerSubtitle}>
-            프리미엄으로 프로그램을 업그레이드하고{'\n'}
-            당신의 운동을 더욱 즐겁게 만들어보세요!
+            수업 신청을 위한 구독을 시작하고{'\n'}
+            다양한 혜택을 이용해보세요!
           </Text>
         </View>
 
-        {/* 프리미엄 혜택 미리보기 */}
+        {/* 구독 혜택 미리보기 */}
         <View style={styles.previewSection}>
-          <Text style={styles.sectionTitle}>프리미엄 혜택 미리보기</Text>
+          <Text style={styles.sectionTitle}>구독 혜택 미리보기</Text>
           <View style={styles.previewGrid}>
             <View style={styles.previewItem}>
               <Text style={styles.previewIcon}>⚡</Text>
-              <Text style={styles.previewText}>우선 예약</Text>
+              <Text style={styles.previewText}>수업 신청</Text>
             </View>
             <View style={styles.previewItem}>
               <Text style={styles.previewIcon}>💬</Text>

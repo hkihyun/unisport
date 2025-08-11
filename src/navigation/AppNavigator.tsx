@@ -13,6 +13,7 @@ import { HomeScreen } from '../screens/HomeScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { BookingScreen } from '../screens/BookingScreen';
+import { PaymentScreen } from '../screens/PaymentScreen';
 
 // 임시 화면 컴포넌트 (아직 만들지 않은 화면들용)
 const TempScreen: React.FC<{ title: string }> = ({ title }) => (
@@ -34,6 +35,7 @@ type RootStackParamList = {
   [SCREENS.CREATE_LESSON]: undefined;
   [SCREENS.EDIT_PROFILE]: undefined;
   [SCREENS.SETTINGS]: undefined;
+  [SCREENS.PAYMENT]: undefined;
 };
 
 // 탭 네비게이터 타입 정의
@@ -120,7 +122,7 @@ const MainTabNavigator: React.FC = () => {
       />
       <Tab.Screen
         name={SCREENS.PROFILE}
-        component={ProfileScreen}
+        component={({ navigation }: any) => <ProfileScreen navigation={navigation} />}
         options={{
           title: '프로필',
           tabBarLabel: '프로필',
@@ -212,6 +214,11 @@ const AppNavigator: React.FC = () => {
               name={SCREENS.SETTINGS}
               component={() => <TempScreen title="설정" />}
               options={{ title: '설정' }}
+            />
+            <Stack.Screen
+              name={SCREENS.PAYMENT}
+              component={PaymentScreen}
+              options={{ title: '구독 상태' }}
             />
           </>
         )}

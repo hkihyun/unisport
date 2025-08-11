@@ -1,10 +1,16 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { COLORS } from '../constants/colors';
 import { useAuth } from '../hooks/useAuth';
+import { SCREENS } from '../constants/screens';
 
-export const ProfileScreen: React.FC = () => {
+type ProfileScreenProps = {
+  navigation: StackNavigationProp<any>;
+};
+
+export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const { user, tempLogout } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [editedUser, setEditedUser] = useState({
@@ -41,6 +47,7 @@ export const ProfileScreen: React.FC = () => {
 
   const menuItems = [
     { title: '내 프로필', description: '개인정보 수정' },
+    { title: '구독 상태', description: '구독 관리 및 결제', icon: '💳', onPress: () => navigation.navigate(SCREENS.PAYMENT) },
     { title: '강사인증', description: '강사 등록 및 인증' },
     { title: '학생인증', description: '학생 인증 상태' },
     { title: '알림', description: '알림 설정' },
@@ -156,10 +163,16 @@ export const ProfileScreen: React.FC = () => {
         {/* 메뉴 섹션 */}
         <View style={styles.menuSection}>
           {menuItems.map((item, index) => (
-            <TouchableOpacity key={index} style={styles.menuItem}>
+            <TouchableOpacity 
+              key={index} 
+              style={styles.menuItem}
+              onPress={item.onPress}
+            >
               <View style={styles.menuItemLeft}>
                 <View style={styles.menuIcon}>
-                  <Text style={styles.menuIconText}>{item.title.charAt(0)}</Text>
+                  <Text style={styles.menuIconText}>
+                    {item.icon || item.title.charAt(0)}
+                  </Text>
                 </View>
                 <View style={styles.menuTextContainer}>
                   <Text style={styles.menuTitle}>{item.title}</Text>
