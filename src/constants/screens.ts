@@ -34,6 +34,10 @@ export const BOOKING_SCREENS = {
   BOOKING_DETAIL: 'BookingDetail',
   CREATE_BOOKING: 'CreateBooking',
   PAYMENT: 'Payment',
+  SCHEDULE_LIST: 'ScheduleList',
+  SPORT_LIST: 'SportList',
+  SPORT_LESSONS: 'SportLessons',
+  BOOKING_CONFIRM: 'BookingConfirm',
 } as const;
 
 // 프로필 관련 화면
@@ -50,6 +54,9 @@ export const LESSON_SCREENS = {
   CREATE_LESSON: 'CreateLesson',
   EDIT_LESSON: 'EditLesson',
   LESSON_MANAGEMENT: 'LessonManagement',
+  INSTRUCTOR_VERIFY: 'InstructorVerify',
+  CREATE_LESSON_INFO: 'CreateLessonInfo',
+  CREATE_LESSON_COMPLETE: 'CreateLessonComplete',
 } as const;
 
 // 관심수업 관련 화면

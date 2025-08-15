@@ -10,12 +10,14 @@ type ProfileScreenProps = {
 };
 
 export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
-  const { user, tempLogout } = useAuth();
+  const { user, isAuthenticated, login, tempLogin, tempLogout } = useAuth();
+  const [loginId, setLoginId] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [editedUser, setEditedUser] = useState({
-    name: user?.name || '김철수',
-    email: user?.email || 'kim@example.com',
-    university: user?.university || '서울대학교',
+    name: user?.name || '개발자',
+    email: user?.email || 'dev@example.com',
+    university: user?.university || '고려대학교',
     major: user?.major || '체육교육과',
     grade: user?.grade || 3,
     bio: user?.bio || '안녕하세요! 스포츠를 사랑하는 대학생입니다.',
@@ -39,6 +41,17 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
     );
   };
 
+  const handleLogin = async () => {
+    if (!loginId || !loginPassword) {
+      Alert.alert('오류', '아이디와 비밀번호를 입력해주세요.');
+      return;
+    }
+    const ok = await login({ email: loginId, password: loginPassword });
+    if (!ok) {
+      Alert.alert('로그인 실패', '아이디 또는 비밀번호를 확인해주세요.');
+    }
+  };
+
   const handleSave = () => {
     setIsEditing(false);
     Alert.alert('저장 완료', '프로필이 업데이트되었습니다.');
@@ -47,12 +60,57 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const menuItems = [
     { title: '내 프로필', description: '개인정보 수정' },
     { title: '구독 상태', description: '구독 관리 및 결제', icon: '💳', onPress: () => navigation.navigate(SCREENS.PAYMENT) },
-    { title: '강사인증', description: '강사 등록 및 인증' },
+    { title: '강사 인증하기', description: '강사 등록 및 인증', icon: '✔', onPress: () => navigation.navigate(SCREENS.INSTRUCTOR_VERIFY) },
+    { title: '수업 개설하기', description: '강좌 정보 입력 후 개설', icon: '🧾', onPress: () => navigation.navigate(SCREENS.CREATE_LESSON_INFO) },
     { title: '학생인증', description: '학생 인증 상태' },
     { title: '알림', description: '알림 설정' },
     { title: '이용약관', description: '서비스 이용약관' },
     { title: '개인정보처리방침', description: '개인정보 보호정책' },
   ];
+
+  if (!isAuthenticated) {
+    return (
+      <View style={styles.container}>
+        <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.loginContent}>
+          <View style={styles.loginHeaderRow}>
+            <Text style={styles.loginHeaderTitle}>로그인/회원가입</Text>
+          </View>
+          <View style={styles.loginAvatar}>
+            <Text style={styles.loginAvatarText}>US</Text>
+          </View>
+          <View style={styles.loginForm}>
+            <TextInput
+              style={styles.loginInput}
+              value={loginId}
+              onChangeText={setLoginId}
+              placeholder="ID입력"
+              placeholderTextColor={COLORS.TEXT_MUTED}
+              autoCapitalize="none"
+            />
+            <TextInput
+              style={styles.loginInput}
+              value={loginPassword}
+              onChangeText={setLoginPassword}
+              placeholder="암호입력"
+              placeholderTextColor={COLORS.TEXT_MUTED}
+              secureTextEntry
+            />
+            <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+              <Text style={styles.loginButtonText}>로그인</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.loginActionsRow}>
+            <TouchableOpacity style={styles.roundAction} onPress={tempLogin}>
+              <Text style={styles.roundActionText}>전화번호로 로그인</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.roundAction} onPress={() => Alert.alert('회원가입', '회원가입 플로우는 추후 연결 예정입니다.') }>
+              <Text style={styles.roundActionText}>회원가입</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -201,6 +259,82 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flex: 1,
+  },
+  loginContent: {
+    alignItems: 'center',
+    paddingTop: 48,
+    paddingBottom: 32,
+    paddingHorizontal: 24,
+  },
+  loginHeaderRow: {
+    width: '100%',
+    marginBottom: 24,
+  },
+  loginHeaderTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: COLORS.TEXT_PRIMARY,
+  },
+  loginAvatar: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: COLORS.BACKGROUND_TERTIARY,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  loginAvatarText: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: COLORS.TEXT_SECONDARY,
+  },
+  loginForm: {
+    width: '100%',
+    gap: 12,
+    marginBottom: 24,
+  },
+  loginInput: {
+    height: 48,
+    borderWidth: 1.5,
+    borderColor: COLORS.BORDER,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    backgroundColor: COLORS.WHITE,
+    color: COLORS.TEXT_PRIMARY,
+  },
+  loginButton: {
+    backgroundColor: COLORS.PRIMARY,
+    height: 48,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
+  },
+  loginButtonText: {
+    color: COLORS.WHITE,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  loginActionsRow: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  roundAction: {
+    flex: 1,
+    marginHorizontal: 8,
+    backgroundColor: COLORS.BACKGROUND_TERTIARY,
+    borderRadius: 28,
+    height: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  roundActionText: {
+    color: COLORS.TEXT_SECONDARY,
+    fontSize: 13,
+    fontWeight: '600',
   },
   profileHeader: {
     backgroundColor: COLORS.WHITE,

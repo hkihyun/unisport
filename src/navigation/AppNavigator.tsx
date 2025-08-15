@@ -16,6 +16,14 @@ import { ProfileScreen } from '../screens/ProfileScreen';
 import { BookingScreen } from '../screens/BookingScreen';
 import { PaymentScreen } from '../screens/PaymentScreen';
 import { FavoritesScreen } from '../screens/FavoritesScreen';
+import ScheduleListScreen from '../screens/ScheduleListScreen';
+import SportListScreen from '../screens/SportListScreen';
+import SportLessonsScreen from '../screens/SportLessonsScreen';
+import BookingDetailScreen from '../screens/BookingDetailScreen';
+import BookingConfirmScreen from '../screens/BookingConfirmScreen';
+import InstructorVerifyScreen from '../screens/InstructorVerifyScreen';
+import CreateLessonInfoScreen from '../screens/CreateLessonInfoScreen';
+import CreateLessonCompleteScreen from '../screens/CreateLessonCompleteScreen';
 
 // 임시 화면 컴포넌트 (아직 만들지 않은 화면들용)
 const TempScreen: React.FC<{ title: string }> = ({ title }) => (
@@ -38,6 +46,13 @@ type RootStackParamList = {
   [SCREENS.EDIT_PROFILE]: undefined;
   [SCREENS.SETTINGS]: undefined;
   [SCREENS.PAYMENT]: undefined;
+  [SCREENS.SCHEDULE_LIST]: { date: string };
+  [SCREENS.SPORT_LIST]: undefined;
+  [SCREENS.SPORT_LESSONS]: { sport: string; date?: string };
+  [SCREENS.BOOKING_CONFIRM]: { type: 'book' | 'wish'; lessonId: string };
+  [SCREENS.INSTRUCTOR_VERIFY]: undefined;
+  [SCREENS.CREATE_LESSON_INFO]: undefined;
+  [SCREENS.CREATE_LESSON_COMPLETE]: { title: string; date: string; time: string; place: string };
 };
 
 // 탭 네비게이터 타입 정의
@@ -102,7 +117,7 @@ const MainTabNavigator: React.FC = () => {
         name={SCREENS.HOME}
         component={HomeScreen}
         options={{
-          title: '수업 리스트',
+          title: '홈',
           tabBarLabel: '홈',
         }}
       />
@@ -110,24 +125,24 @@ const MainTabNavigator: React.FC = () => {
         name={SCREENS.BOOKINGS}
         component={BookingScreen}
         options={{
-          title: '내 예약',
-          tabBarLabel: '예약',
+          title: '수업예약',
+          tabBarLabel: '수업예약',
         }}
       />
       <Tab.Screen
         name={SCREENS.FAVORITES}
         component={FavoritesScreen}
         options={{
-          title: '관심수업',
-          tabBarLabel: '관심수업',
+          title: '내 수업',
+          tabBarLabel: '내 수업',
         }}
       />
       <Tab.Screen
         name={SCREENS.PROFILE}
         component={({ navigation }: any) => <ProfileScreen navigation={navigation} />}
         options={{
-          title: '프로필',
-          tabBarLabel: '프로필',
+          title: '마이',
+          tabBarLabel: '마이',
         }}
       />
     </Tab.Navigator>
@@ -176,60 +191,77 @@ const AppNavigator: React.FC = () => {
             headerTintColor: COLORS.PRIMARY,
           }}
         >
-          {!isAuthenticated ? (
-            // 인증되지 않은 사용자 - 로그인/회원가입 화면
-            <>
-              <Stack.Screen
-                name={SCREENS.LOGIN}
-                component={LoginScreen}
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name={SCREENS.REGISTER}
-                component={() => <TempScreen title="회원가입" />}
-                options={{ title: '회원가입' }}
-              />
-            </>
-          ) : (
-            // 인증된 사용자 - 메인 앱 화면
-            <>
-              <Stack.Screen
-                name={SCREENS.HOME}
-                component={MainTabNavigator}
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name={SCREENS.LESSON_DETAIL}
-                component={() => <TempScreen title="수업 상세" />}
-                options={{ title: '수업 상세' }}
-              />
-              <Stack.Screen
-                name={SCREENS.INSTRUCTOR_PROFILE}
-                component={() => <TempScreen title="강사 프로필" />}
-                options={{ title: '강사 프로필' }}
-              />
-              <Stack.Screen
-                name={SCREENS.CREATE_LESSON}
-                component={() => <TempScreen title="수업 생성" />}
-                options={{ title: '수업 생성' }}
-              />
-              <Stack.Screen
-                name={SCREENS.EDIT_PROFILE}
-                component={() => <TempScreen title="프로필 수정" />}
-                options={{ title: '프로필 수정' }}
-              />
-              <Stack.Screen
-                name={SCREENS.SETTINGS}
-                component={() => <TempScreen title="설정" />}
-                options={{ title: '설정' }}
-              />
-              <Stack.Screen
-                name={SCREENS.PAYMENT}
-                component={PaymentScreen}
-                options={{ title: '구독 상태' }}
-              />
-            </>
-          )}
+          {/** 로그인은 프로필 탭 내부에서 처리할 수 있도록, 인증 여부와 무관하게 메인 탭을 항상 루트로 표시 */}
+          <Stack.Screen
+            name={SCREENS.HOME}
+            component={MainTabNavigator}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name={SCREENS.LESSON_DETAIL}
+            component={BookingDetailScreen}
+            options={{ title: '수업 상세' }}
+          />
+          <Stack.Screen
+            name={SCREENS.INSTRUCTOR_PROFILE}
+            component={() => <TempScreen title="강사 프로필" />}
+            options={{ title: '강사 프로필' }}
+          />
+          <Stack.Screen
+            name={SCREENS.CREATE_LESSON}
+            component={() => <TempScreen title="수업 생성" />}
+            options={{ title: '수업 생성' }}
+          />
+          <Stack.Screen
+            name={SCREENS.EDIT_PROFILE}
+            component={() => <TempScreen title="프로필 수정" />}
+            options={{ title: '프로필 수정' }}
+          />
+          <Stack.Screen
+            name={SCREENS.SETTINGS}
+            component={() => <TempScreen title="설정" />}
+            options={{ title: '설정' }}
+          />
+          <Stack.Screen
+            name={SCREENS.PAYMENT}
+            component={PaymentScreen}
+            options={{ title: '구독 상태' }}
+          />
+          <Stack.Screen
+            name={SCREENS.SCHEDULE_LIST}
+            component={ScheduleListScreen}
+            options={{ title: '수업예약' }}
+          />
+          <Stack.Screen
+            name={SCREENS.SPORT_LIST}
+            component={SportListScreen}
+            options={{ title: '종목 선택' }}
+          />
+          <Stack.Screen
+            name={SCREENS.SPORT_LESSONS}
+            component={SportLessonsScreen}
+            options={{ title: '수업 목록' }}
+          />
+          <Stack.Screen
+            name={SCREENS.BOOKING_CONFIRM}
+            component={BookingConfirmScreen}
+            options={{ title: '예약/관심 확인' }}
+          />
+          <Stack.Screen
+            name={SCREENS.INSTRUCTOR_VERIFY}
+            component={InstructorVerifyScreen}
+            options={{ title: '강사 인증하기' }}
+          />
+          <Stack.Screen
+            name={SCREENS.CREATE_LESSON_INFO}
+            component={CreateLessonInfoScreen}
+            options={{ title: '수업 개설하기' }}
+          />
+          <Stack.Screen
+            name={SCREENS.CREATE_LESSON_COMPLETE}
+            component={CreateLessonCompleteScreen}
+            options={{ title: '수업 개설 완료' }}
+          />
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>

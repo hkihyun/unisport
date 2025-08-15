@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { SCREENS } from '../constants/screens';
+import SportListScreen from './SportListScreen';
+import LessonListScreen from './LessonListScreen';
+import BookingBottomSheet from './BookingBottomSheet';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '../constants/colors';
 
@@ -70,8 +75,14 @@ const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
 
 export const BookingScreen: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<'calendar' | 'list'>('list');
+  const [activeTab, setActiveTab] = useState<'calendar' | 'sports' | 'classes'>('calendar');
   const [currentDate, setCurrentDate] = useState(new Date());
+  const navigation = useNavigation<any>();
+  const [showSheet, setShowSheet] = useState(false);
+  const [sheetLessons, setSheetLessons] = useState(
+    [] as Array<{ id: string; time: string; title: string; place: string }>
+  );
+  const [sheetDateText, setSheetDateText] = useState('');
   
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth() + 1;
@@ -189,7 +200,20 @@ export const BookingScreen: React.FC = () => {
               item.isToday && styles.today,
               !item.isCurrentMonth && styles.otherMonth,
             ]}
-            onPress={() => item.isSelectable && setSelectedDate(item.day)}
+            onPress={() => {
+              if (!item.isSelectable || !item.day) return;
+              setSelectedDate(item.day);
+              const date = new Date(currentYear, currentMonth - 1, item.day);
+              // 바텀 시트에 표시할 더미 데이터 구성 (API 연동 시 교체)
+              const lessons = [
+                { id: '1', time: '14:30', title: '요가', place: '고려대학교 체육체육관' },
+                { id: '2', time: '15:30', title: '런닝', place: '고려대학교 체육체육관' },
+                { id: '3', time: '16:30', title: '요가', place: '고려대학교 체육체육관' },
+              ];
+              setSheetLessons(lessons);
+              setSheetDateText(`${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`);
+              setShowSheet(true);
+            }}
             disabled={!item.isSelectable}
           >
             {item.day && (
@@ -210,22 +234,7 @@ export const BookingScreen: React.FC = () => {
           </TouchableOpacity>
         ))}
       </View>
-      
-      {selectedDate && (
-        <View style={styles.selectedDateInfo}>
-          <Text style={styles.selectedDateText}>
-            {currentYear}년 {currentMonth}월 {selectedDate}일
-          </Text>
-          <View style={styles.timeSlots}>
-            <Text style={styles.timeSlotsTitle}>예약 가능한 시간</Text>
-            {['10:00 - 11:00', '13:00 - 14:00', '15:00 - 16:00'].map((time) => (
-              <TouchableOpacity key={time} style={styles.timeSlot}>
-                <Text style={styles.timeSlotText}>{time}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      )}
+    
     </View>
   );
 
@@ -234,14 +243,6 @@ export const BookingScreen: React.FC = () => {
       {/* 탭 헤더 */}
       <View style={styles.tabContainer}>
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'list' && styles.activeTab]}
-          onPress={() => setActiveTab('list')}
-        >
-          <Text style={[styles.tabText, activeTab === 'list' && styles.activeTabText]}>
-            예약 목록
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
           style={[styles.tab, activeTab === 'calendar' && styles.activeTab]}
           onPress={() => setActiveTab('calendar')}
         >
@@ -249,10 +250,40 @@ export const BookingScreen: React.FC = () => {
             달력 보기
           </Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'sports' && styles.activeTab]}
+          onPress={() => setActiveTab('sports')}
+        >
+          <Text style={[styles.tabText, activeTab === 'sports' && styles.activeTabText]}>
+            종목 선택
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'classes' && styles.activeTab]}
+          onPress={() => setActiveTab('classes')}
+        >
+          <Text style={[styles.tabText, activeTab === 'classes' && styles.activeTabText]}>
+            수업리스트
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* 컨텐츠 */}
-      {activeTab === 'list' ? renderBookingList() : renderCalendar()}
+      {activeTab === 'calendar' && renderCalendar()}
+      {activeTab === 'sports' && <SportListScreen />}
+      {activeTab === 'classes' && <LessonListScreen />}
+
+      {showSheet && (
+        <BookingBottomSheet
+          dateText={sheetDateText}
+          lessons={sheetLessons}
+          onSelect={(lesson) => {
+            setShowSheet(false);
+            navigation.navigate(SCREENS.LESSON_DETAIL, { lessonId: lesson.id, title: lesson.title });
+          }}
+          onClose={() => setShowSheet(false)}
+        />
+      )}
     </View>
   );
 };
@@ -556,4 +587,5 @@ const styles = StyleSheet.create({
     color: COLORS.TEXT_PRIMARY,
     fontWeight: '600',
   },
+  
 });

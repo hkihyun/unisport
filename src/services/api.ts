@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ApiResponse, PaginatedResponse, PaginationParams } from '../types';
 
 // API 기본 설정
-const API_BASE_URL = 'https://your-api-domain.com/api'; // 팀원이 제공하는 API 도메인으로 변경 필요
+const API_BASE_URL = 'https://unisportserver.onrender.com';
 
 // HTTP 메서드 타입
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
@@ -129,7 +129,8 @@ export const apiClient = new ApiClient(API_BASE_URL);
 export const API_ENDPOINTS = {
   // 인증 관련
   AUTH: {
-    LOGIN: '/auth/login',
+    LOGIN: '/login',
+    // 아래 엔드포인트는 Swagger 스펙에 없으므로 추후 서버 추가 시 활성화
     REGISTER: '/auth/register',
     LOGOUT: '/auth/logout',
     REFRESH: '/auth/refresh',
