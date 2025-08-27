@@ -21,12 +21,11 @@ export const ScheduleListScreen: React.FC<Props> = ({ route }) => {
 		<View style={styles.container}>
 			<View style={styles.header}> 
 				<Text style={styles.headerTitle}>수업예약</Text>
-				<Text style={styles.headerDate}>{title}</Text>
+				<Text style={styles.headerDate}>{`${date.getFullYear()}.${date.getMonth() + 1}`}</Text>
 			</View>
 			<ScrollView style={styles.list}>
 				{mockLessons.map((l) => (
 					<View key={l.id} style={styles.card}>
-						<View style={styles.timelineDot} />
 						<View style={styles.cardLeft}>
 							<Text style={styles.time}>{l.time}</Text>
 							<Text style={styles.title}>{l.title}</Text>
@@ -41,18 +40,17 @@ export const ScheduleListScreen: React.FC<Props> = ({ route }) => {
 };
 
 const styles = StyleSheet.create({
-	container: { flex: 1, backgroundColor: COLORS.BACKGROUND_SECONDARY },
+	container: { flex: 1, backgroundColor: '#EDF2F8' },
 	header: { padding: 16, backgroundColor: COLORS.WHITE, borderBottomWidth: 1, borderBottomColor: COLORS.BORDER },
-	headerTitle: { fontSize: 18, fontWeight: '700', color: COLORS.TEXT_PRIMARY, marginBottom: 8 },
-	headerDate: { fontSize: 16, color: COLORS.TEXT_SECONDARY },
+	headerTitle: { fontSize: 23, fontWeight: '600', color: '#696E83', marginBottom: 8 },
+	headerDate: { fontSize: 26, fontWeight: '500', color: '#2B308B' },
 	list: { padding: 16 },
-	card: { backgroundColor: COLORS.WHITE, borderWidth: 1, borderColor: COLORS.BORDER_LIGHT, borderRadius: 12, padding: 16, marginBottom: 12, flexDirection: 'row', alignItems: 'center', position: 'relative' },
-	timelineDot: { position: 'absolute', left: 6, width: 8, height: 8, borderRadius: 4, backgroundColor: COLORS.GRAY_300 },
+	card: { backgroundColor: '#FEFEFF', borderWidth: 1, borderColor: COLORS.BORDER_LIGHT, borderRadius: 20, padding: 16, marginBottom: 12, flexDirection: 'row', alignItems: 'center' },
 	cardLeft: { flex: 1, marginLeft: 12 },
-	time: { fontSize: 14, color: COLORS.TEXT_SECONDARY, marginBottom: 4 },
-	title: { fontSize: 16, fontWeight: '700', color: COLORS.TEXT_PRIMARY, marginBottom: 8 },
-	place: { fontSize: 12, color: COLORS.TEXT_SECONDARY },
-	imageBox: { width: 64, height: 64, borderRadius: 8, backgroundColor: COLORS.BACKGROUND_TERTIARY },
+	time: { fontSize: 18, color: '#2B308B', marginBottom: 4 },
+	title: { fontSize: 25, fontWeight: '700', color: '#2B308B', marginBottom: 8 },
+	place: { fontSize: 13, color: '#696E83' },
+	imageBox: { width: 94, height: 94, borderRadius: 8, backgroundColor: '#6A6A6A' },
 });
 
 export default ScheduleListScreen;

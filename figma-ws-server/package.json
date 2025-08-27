@@ -1,0 +1,17 @@
+{
+  "name": "figma-ws-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "main": "server.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "set PORT=8080 && node server.js",
+    "start:dev": "set PORT=8080 && node server.js",
+    "start:3055": "set PORT=3055 && node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}
+

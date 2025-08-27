@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { COLORS } from '../constants/colors';
+import { HeartIcon } from '../../assets/icons/HeartIcon';
 
 type Lesson = {
 	id: string;
@@ -19,24 +20,47 @@ type Props = {
 export const BookingBottomSheet: React.FC<Props> = ({ dateText, lessons, onSelect, onClose }) => {
 	return (
 		<View style={styles.sheet}>
-			<View style={styles.handle} />
-			<Text style={styles.title}>{dateText}</Text>
-			<ScrollView style={{ maxHeight: 360 }}>
-				{lessons.map((l) => (
-					<TouchableOpacity key={l.id} style={styles.card} onPress={() => onSelect(l)}>
-						<View style={styles.dot} />
-						<View style={styles.left}>
-							<Text style={styles.time}>{l.time}</Text>
-							<Text style={styles.lesson}>{l.title}</Text>
-							<Text style={styles.place}>{l.place}</Text>
+			{/* 상단 닫기 버튼 */}
+			<View style={styles.header}>
+				<TouchableOpacity style={styles.closeIcon} onPress={onClose}>
+					<View style={styles.closeIconInner} />
+				</TouchableOpacity>
+			</View>
+
+			{/* 스크롤 가능한 전체 영역 */}
+			<ScrollView
+				showsVerticalScrollIndicator={false}
+				nestedScrollEnabled={true}
+				contentContainerStyle={{ 
+					paddingBottom: 100
+				}}
+			>
+				{lessons.map((l, idx) => (
+					<View key={l.id} style={styles.timelineRow}>
+						{/* 타임라인 좌측 축 */}
+						<View style={styles.timelineCol}>
+							{idx !== 0 && <View style={styles.timelineLineTop} />}
+							<View style={styles.timelineDot} />
+							{idx !== lessons.length - 1 && <View style={styles.timelineLineBottom} />}
 						</View>
-						<View style={styles.thumb} />
-					</TouchableOpacity>
+						{/* 카드 */}
+						<TouchableOpacity style={styles.lessonCard} onPress={() => onSelect(l)}>
+							<View style={styles.cardLeft}>
+								<Text style={styles.cardTime}>{l.time}</Text>
+								<Text style={styles.cardTitle}>{l.title}</Text>
+								<Text style={styles.cardPlace}>{l.place}</Text>
+							</View>
+							<View style={styles.cardRight}>
+								<View style={styles.cardThumb} />
+								<Text style={styles.availableText}>예약가능</Text>
+								<View style={styles.HeartIconcontainer}>
+									<HeartIcon size={30} color="#5981FA" />
+								</View>
+							</View>
+						</TouchableOpacity>
+					</View>
 				))}
 			</ScrollView>
-			<TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-				<Text style={styles.closeText}>닫기</Text>
-			</TouchableOpacity>
 		</View>
 	);
 };
@@ -58,20 +82,129 @@ const styles = StyleSheet.create({
 		shadowOpacity: 0.1,
 		shadowRadius: 12,
 		elevation: 12,
+		maxHeight: '68%',
 	},
-	handle: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: COLORS.GRAY_200, marginBottom: 12 },
-	title: { fontSize: 16, fontWeight: '700', color: COLORS.TEXT_PRIMARY, marginBottom: 12 },
-	card: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.WHITE, borderWidth: 1, borderColor: COLORS.BORDER_LIGHT, borderRadius: 12, padding: 16, marginBottom: 10, position: 'relative' },
-	dot: { position: 'absolute', left: 8, width: 8, height: 8, borderRadius: 4, backgroundColor: COLORS.GRAY_300 },
-	left: { flex: 1, marginLeft: 8 },
-	time: { fontSize: 12, color: COLORS.TEXT_SECONDARY, marginBottom: 4 },
-	lesson: { fontSize: 16, fontWeight: '700', color: COLORS.TEXT_PRIMARY, marginBottom: 6 },
-	place: { fontSize: 12, color: COLORS.TEXT_SECONDARY },
-	thumb: { width: 56, height: 56, borderRadius: 8, backgroundColor: COLORS.BACKGROUND_TERTIARY },
-	closeBtn: { marginTop: 8, alignItems: 'center', paddingVertical: 12, borderRadius: 12, backgroundColor: COLORS.BACKGROUND_TERTIARY },
-	closeText: { color: COLORS.TEXT_PRIMARY, fontWeight: '600' },
+	/* 타임라인 레이아웃 */
+	timelineRow: { 
+		flexDirection: 'row', 
+		alignItems: 'stretch', 
+		marginBottom: 16, 
+		paddingHorizontal: 24 
+	},
+	timelineCol: { 
+		width: 5, 
+		alignItems: 'center',
+		left: -10
+	},
+	timelineLineTop: { 
+		flex: 1, 
+		width: 2, 
+		backgroundColor: '#5981FA' 
+	},
+	timelineLineBottom: { 
+		flex: 1, 
+		width: 2, 
+		backgroundColor: '#5981FA' 
+	},
+	timelineDot: { 
+		width: 21, 
+		height: 21, 
+		borderRadius: 10.5, 
+		backgroundColor: '#5981FA' 
+		
+	},
+	/* 카드 */
+	lessonCard: { 
+		backgroundColor: '#EDF2F8', 
+		borderRadius: 16, 
+		padding: 20, 
+		flexDirection: 'row', 
+		alignItems: 'center',
+		height: 125,
+		width: 324,
+		elevation: 3,
+		left: 8,
+	},
+	cardLeft: { 
+		flex: 1 
+	},
+	cardRight: { 
+		width: 110, 
+		alignItems: 'flex-end', 
+		justifyContent: 'center' 
+	},
+	cardThumb: { 
+		width: 94, 
+		height: 94, 
+		borderRadius: 0, 
+		backgroundColor: '#AEC7EB',
+		top: 20,
+		left: -30
+	},
+	heartOutline: { 
+		position: 'absolute', 
+		top: 35, 
+		right: -6,
+		width: 28, 
+		height: 28, 
+		borderWidth: 2, 
+		borderColor: '#5981FA', 
+		borderRadius: 6 
+	},
+	cardTime: { 
+		fontSize: 15, 
+		color: '#2B308B', 
+		marginBottom: 15 
+	},
+	cardTitle: { 
+		fontSize: 20, 
+		fontWeight: '700', 
+		color: '#2B308B', 
+		marginBottom: 15 
+	},
+	cardPlace: { 
+		fontSize: 13, 
+		color: '#696E83', 
+		marginBottom: 5 
+	},
+	availableText: { 
+		fontSize: 15, 
+		color: '#5981FA', 
+		fontWeight: '400',
+		marginTop: 8,
+		left: -50,
+		top: -10
+	},
+	header: {
+		flexDirection: 'row',
+		justifyContent: 'center',
+		alignItems: 'center',
+		marginBottom: 16,
+		paddingHorizontal: 24,
+	},
+	closeIcon: {
+		width: 32,
+		height: 32,
+		borderRadius: 16,
+		backgroundColor: '#E5E7EB',
+		justifyContent: 'center',
+		alignItems: 'center',
+	},
+	closeIconInner: {
+		width: 16,
+		height: 16,
+		borderRadius: 8,
+		backgroundColor: '#6B7280',
+	},
+	HeartIconcontainer: {
+		position: 'absolute',
+		top: 39,
+		right: -9,
+		width: 28,
+		height: 28,
+		justifyContent: 'center',
+		alignItems: 'center',
+		zIndex: 1,
+	},
 });
-
 export default BookingBottomSheet;
-
-

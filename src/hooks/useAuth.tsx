@@ -9,6 +9,7 @@ export interface AuthState {
   token: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  isJustLoggedIn: boolean; // 로그인 직후 상태 추가
 }
 
 // 인증 컨텍스트 액션 타입
@@ -18,8 +19,6 @@ export interface AuthActions {
   logout: () => Promise<void>;
   updateProfile: (userData: Partial<User>) => Promise<boolean>;
   refreshUser: () => Promise<void>;
-  tempLogin: () => void;
-  tempLogout: () => void;
 }
 
 export interface UseAuthReturn extends AuthState, AuthActions {}
@@ -30,120 +29,141 @@ interface AuthProviderProps {
 
 const AuthContext = createContext<UseAuthReturn | undefined>(undefined);
 
-// 토큰 저장
-const saveToken = async (token: string): Promise<void> => {
-  try {
-    await AsyncStorage.setItem('authToken', token);
-  } catch (error) {
-    console.error('Failed to save token:', error);
-  }
-};
-
-const removeToken = async (): Promise<void> => {
-  try {
-    await AsyncStorage.removeItem('authToken');
-  } catch (error) {
-    console.error('Failed to remove token:', error);
-  }
-};
-
-const saveUser = async (user: User): Promise<void> => {
-  try {
-    await AsyncStorage.setItem('user', JSON.stringify(user));
-  } catch (error) {
-    console.error('Failed to save user:', error);
-  }
-};
-
-const removeUser = async (): Promise<void> => {
-  try {
-    await AsyncStorage.removeItem('user');
-  } catch (error) {
-    console.error('Failed to remove user:', error);
-  }
-};
-
-const tempUser: User = {
-  id: 'temp-user-1',
-  name: '개발자',
-  email: 'dev@example.com',
-  university: '고려대학교',
-  major: '컴퓨터학과',
-  grade: 2,
-  bio: '개발 중인 사용자입니다.',
-  rating: 4.5,
-  reviewCount: 10,
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-};
-
 const AuthProvider = ({ children }: AuthProviderProps) => {
   const [authState, setAuthState] = useState<AuthState>({
     user: null,
     token: null,
     isLoading: true,
     isAuthenticated: false,
+    isJustLoggedIn: false, // 초기값 설정
   });
 
-  useEffect(() => {
-    const loadAuthState = async () => {
-      try {
-        const [token, userString] = await Promise.all([
-          AsyncStorage.getItem('authToken'),
-          AsyncStorage.getItem('user'),
-        ]);
-        if (token && userString) {
-          const user = JSON.parse(userString) as User;
+  // 앱 시작 시 인증 상태 초기화
+  const initializeAuth = async (): Promise<void> => {
+    try {
+      const [savedUser, savedToken] = await Promise.all([
+        AsyncStorage.getItem('user'),
+        AsyncStorage.getItem('authToken')
+      ]);
+
+      // 저장된 토큰이 있고, 유효한 사용자 정보가 있는 경우에만 로그인 상태로 설정
+      if (savedToken && savedUser) {
+        try {
+          const user = JSON.parse(savedUser);
+          // 토큰 유효성 검증 (실제 구현에서는 서버에 토큰 유효성 확인 요청)
+          // 여기서는 간단히 저장된 정보가 있는지만 확인
+          if (user && user.id) {
+            setAuthState({
+              user,
+              token: savedToken,
+              isAuthenticated: true,
+              isLoading: false,
+              isJustLoggedIn: false
+            });
+          } else {
+            // 유효하지 않은 사용자 정보인 경우 로그아웃 상태로 설정
+            setAuthState({
+              user: null,
+              token: null,
+              isAuthenticated: false,
+              isLoading: false,
+              isJustLoggedIn: false
+            });
+          }
+        } catch (error) {
+          console.error('저장된 사용자 정보 파싱 실패:', error);
+          // 파싱 실패 시 로그아웃 상태로 설정
           setAuthState({
-            user,
-            token,
+            user: null,
+            token: null,
+            isAuthenticated: false,
             isLoading: false,
-            isAuthenticated: true,
+            isJustLoggedIn: false
           });
-        } else {
-          setAuthState(prev => ({ ...prev, isLoading: false }));
         }
-      } catch (error) {
-        console.error('Failed to load auth state:', error);
-        setAuthState(prev => ({ ...prev, isLoading: false }));
+      } else {
+        // 저장된 정보가 없으면 로그아웃 상태로 설정
+        setAuthState({
+          user: null,
+          token: null,
+          isAuthenticated: false,
+          isLoading: false,
+          isJustLoggedIn: false
+        });
       }
-    };
-    loadAuthState();
+    } catch (error) {
+      console.error('인증 상태 초기화 실패:', error);
+      // 에러 발생 시 로그아웃 상태로 설정
+      setAuthState({
+        user: null,
+        token: null,
+        isAuthenticated: false,
+        isLoading: false,
+        isJustLoggedIn: false
+      });
+    }
+  };
+
+  // isJustLoggedIn 상태를 자동으로 false로 설정하는 useEffect
+  useEffect(() => {
+    if (authState.isJustLoggedIn) {
+      const timer = setTimeout(() => {
+        setAuthState(prev => ({ ...prev, isJustLoggedIn: false }));
+      }, 1000); // 1초 후 자동으로 false로 설정
+      
+      return () => clearTimeout(timer);
+    }
+  }, [authState.isJustLoggedIn]);
+
+  useEffect(() => {
+    initializeAuth();
   }, []);
 
-  const tempLogin = () => {
-    setAuthState({
-      user: tempUser,
-      token: 'temp-token',
-      isLoading: false,
-      isAuthenticated: true,
-    });
-  };
+  // isJustLoggedIn 상태를 3초 후에 false로 초기화
+  useEffect(() => {
+    if (authState.isJustLoggedIn) {
+      const timer = setTimeout(() => {
+        setAuthState(prev => ({ ...prev, isJustLoggedIn: false }));
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [authState.isJustLoggedIn]);
 
-  const tempLogout = () => {
-    setAuthState({
-      user: null,
-      token: null,
-      isLoading: false,
-      isAuthenticated: false,
-    });
-  };
 
   const login = async (credentials: LoginRequest): Promise<boolean> => {
     try {
       setAuthState(prev => ({ ...prev, isLoading: true }));
       const response = await AuthService.login(credentials);
       if (response.success && response.data) {
-        const { user, token } = response.data;
-        await Promise.all([
-          saveToken(token),
-          saveUser(user),
-        ]);
+        // API 응답에서 User 타입으로 변환
+        const user: User = {
+          id: response.data.id.toString(),
+          name: response.data.name,
+          email: response.data.email,
+          university: response.data.university,
+          studentNumber: response.data.studentNumber, // 학번 필드 추가
+          major: '',
+          grade: 0,
+          bio: '',
+          rating: 0,
+          reviewCount: 0,
+          createdAt: response.data.createdAt,
+          updatedAt: response.data.updatedAt,
+        };
+        
+        // 토큰이 없으므로 임시 토큰 생성
+        const tempToken = `temp_${Date.now()}`;
+        
+        await AsyncStorage.setItem('user', JSON.stringify(user));
+        await AsyncStorage.setItem('authToken', tempToken);
+        
         setAuthState({
           user,
-          token,
-          isLoading: false,
+          token: tempToken,
           isAuthenticated: true,
+          isLoading: false,
+          isJustLoggedIn: true // 로그인 직후 상태 설정
         });
         return true;
       } else {
@@ -162,16 +182,30 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
       setAuthState(prev => ({ ...prev, isLoading: true }));
       const response = await AuthService.register(userData);
       if (response.success && response.data) {
-        const { user, token } = response.data;
-        await Promise.all([
-          saveToken(token),
-          saveUser(user),
-        ]);
+        // RegisterResponse를 User 타입으로 변환
+        const user: User = {
+          id: response.data.id.toString(),
+          name: response.data.name,
+          email: response.data.email,
+          university: response.data.university,
+          studentNumber: response.data.studentNumber, // 학번 필드 추가
+          major: '',
+          grade: 0,
+          bio: '',
+          rating: 0,
+          reviewCount: 0,
+          createdAt: response.data.createdAt,
+          updatedAt: response.data.updatedAt,
+        };
+        // 회원가입 후에는 토큰이 없으므로 로그인 상태가 아님
+        await AsyncStorage.setItem('user', JSON.stringify(user));
+        
         setAuthState({
           user,
-          token,
+          token: null,
+          isAuthenticated: false,
           isLoading: false,
-          isAuthenticated: true,
+          isJustLoggedIn: false // 회원가입 후에는 로그인 상태가 아님
         });
         return true;
       } else {
@@ -187,23 +221,30 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const logout = async (): Promise<void> => {
     try {
-      setAuthState(prev => ({ ...prev, isLoading: true }));
-      if (authState.token) {
-        await AuthService.logout();
-      }
+      // AsyncStorage에서 사용자 정보와 토큰 완전히 제거
       await Promise.all([
-        removeToken(),
-        removeUser(),
+        AsyncStorage.removeItem('user'),
+        AsyncStorage.removeItem('authToken')
       ]);
+      
+      // 상태를 로그아웃 상태로 초기화
       setAuthState({
         user: null,
         token: null,
-        isLoading: false,
         isAuthenticated: false,
+        isLoading: false,
+        isJustLoggedIn: false
       });
     } catch (error) {
-      console.error('Logout failed:', error);
-      setAuthState(prev => ({ ...prev, isLoading: false }));
+      console.error('로그아웃 실패:', error);
+      // 에러가 발생해도 상태는 로그아웃으로 설정
+      setAuthState({
+        user: null,
+        token: null,
+        isAuthenticated: false,
+        isLoading: false,
+        isJustLoggedIn: false
+      });
     }
   };
 
@@ -212,10 +253,11 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
       const response = await AuthService.updateProfile(userData);
       if (response.success && response.data) {
         const updatedUser = response.data;
-        await saveUser(updatedUser);
+        await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
         setAuthState(prev => ({
           ...prev,
           user: updatedUser,
+          isJustLoggedIn: false // 프로필 업데이트 시에는 로그인 직후 상태가 아님
         }));
         return true;
       }
@@ -230,11 +272,12 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       const response = await AuthService.getProfile();
       if (response.success && response.data) {
-        const user = response.data;
-        await saveUser(user);
+        const updatedUser = response.data;
+        await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
         setAuthState(prev => ({
           ...prev,
-          user,
+          user: updatedUser,
+          isJustLoggedIn: false // 사용자 정보 새로고침 시에는 로그인 직후 상태가 아님
         }));
       }
     } catch (error) {
@@ -249,8 +292,6 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
     logout,
     updateProfile,
     refreshUser,
-    tempLogin,
-    tempLogout,
   };
 
   return (

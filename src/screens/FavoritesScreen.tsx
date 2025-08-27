@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, FlatList } from 'react-native';
 import { COLORS } from '../constants/colors';
+import SportListScreen from './SportListScreen';
+import LessonListScreen from './LessonListScreen';
 
 // 임시 관심수업 데이터
 const mockFavoriteLessons = [
@@ -90,58 +92,8 @@ export const FavoritesScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-        {/* 헤더 */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>관심수업</Text>
-          <Text style={styles.headerSubtitle}>
-            마음에 드는 수업을 저장하고{'\n'}
-            언제든지 확인할 수 있어요!
-          </Text>
-        </View>
-
-        {/* 통계 카드 */}
-        <View style={styles.statsSection}>
-          <View style={styles.statsCard}>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{favorites.length}</Text>
-              <Text style={styles.statLabel}>저장된 수업</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>
-                {favorites.filter(lesson => lesson.isActive).length}
-              </Text>
-              <Text style={styles.statLabel}>신청 가능</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* 관심수업 목록 */}
-        <View style={styles.favoritesSection}>
-          <Text style={styles.sectionTitle}>저장된 수업</Text>
-          {favorites.length > 0 ? (
-            <FlatList
-              data={favorites}
-              renderItem={renderFavoriteLesson}
-              keyExtractor={(item) => item.id}
-              scrollEnabled={false}
-              showsVerticalScrollIndicator={false}
-            />
-          ) : (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyIcon}>💝</Text>
-              <Text style={styles.emptyTitle}>아직 관심수업이 없어요</Text>
-              <Text style={styles.emptyDescription}>
-                홈에서 마음에 드는 수업을 찾아{'\n'}
-                하트 버튼을 눌러보세요!
-              </Text>
-            </View>
-          )}
-        </View>
-
-        <View style={styles.bottomSpace} />
-      </ScrollView>
+      <SportListScreen />
+      <LessonListScreen />
     </View>
   );
 };

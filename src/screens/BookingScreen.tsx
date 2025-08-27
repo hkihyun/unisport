@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SCREENS } from '../constants/screens';
-import SportListScreen from './SportListScreen';
-import LessonListScreen from './LessonListScreen';
-import BookingBottomSheet from './BookingBottomSheet';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '../constants/colors';
+import { LessonService } from '../services/lessonService';
+import { BackendLesson } from '../types';
+import { BookingBottomSheet } from './BookingBottomSheet';
 
-// 임시 예약 데이터
+// 임시 예약 데이터 (기존 예약 목록용)
 const mockBookings = [
   {
     id: '1',
@@ -54,7 +54,7 @@ const generateCalendarData = (year: number, month: number) => {
     calendar.push({ 
       day, 
       isSelectable: !isPast, // 과거 날짜는 선택 불가
-      hasBooking: [15, 20].includes(day), // 임시 예약 데이터 (나중에 API로 교체)
+      hasBooking: false,
       isCurrentMonth: true,
       isToday,
     });
@@ -75,14 +75,15 @@ const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
 
 export const BookingScreen: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<'calendar' | 'sports' | 'classes'>('calendar');
   const [currentDate, setCurrentDate] = useState(new Date());
   const navigation = useNavigation<any>();
-  const [showSheet, setShowSheet] = useState(false);
-  const [sheetLessons, setSheetLessons] = useState(
-    [] as Array<{ id: string; time: string; title: string; place: string }>
+  const [dailyLessons, setDailyLessons] = useState(
+    [] as Array<{ id: string; time: string; title: string; place: string; available?: boolean }>
   );
-  const [sheetDateText, setSheetDateText] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+
   
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth() + 1;
@@ -102,6 +103,48 @@ export const BookingScreen: React.FC = () => {
     setCurrentDate(new Date());
     setSelectedDate(null);
   };
+
+  // 날짜 선택 시 수업 리스트 표시 및 애니메이션
+  const handleDateSelect = async (day: number) => {
+    if (day && day > 0) {
+      setSelectedDate(day);
+      setLoading(true);
+      setError(null);
+      
+      try {
+        // 날짜 형식을 YYYY-MM-DD로 변환
+        const formattedDate = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const lessons = await LessonService.getLessonsByDate(formattedDate);
+        
+        // BackendLesson을 UI에 맞는 형태로 변환
+        const convertedLessons = lessons.map(lesson => ({
+          id: lesson.id.toString(),
+          time: lesson.lessonTime,
+          title: lesson.title,
+          place: lesson.location,
+          available: true, // 기본적으로 예약 가능으로 설정
+        }));
+        
+        console.log('변환된 레슨 데이터:', convertedLessons);
+        console.log('변환된 레슨 개수:', convertedLessons.length);
+        
+        setDailyLessons(convertedLessons);
+        
+        // 데이터가 있을 때만 상태 업데이트
+        if (convertedLessons.length > 0) {
+          // 애니메이션 없이 바로 표시
+        }
+        // 수업이 없어도 selectedDate는 유지하여 "수업이 없습니다" 메시지가 표시되도록 함
+      } catch (err) {
+        setError('수업 데이터를 불러올 수 없습니다.');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+
 
   const getStatusText = (status: string) => {
     switch (status) {
@@ -130,7 +173,7 @@ export const BookingScreen: React.FC = () => {
   };
 
   const renderBookingList = () => (
-    <ScrollView style={styles.bookingList} showsVerticalScrollIndicator={false}>
+    <ScrollView style={styles.bookingList} showsVerticalScrollIndicator={true}>
       {mockBookings.map((booking) => (
         <View key={booking.id} style={styles.bookingCard}>
           <View style={styles.bookingHeader}>
@@ -168,26 +211,19 @@ export const BookingScreen: React.FC = () => {
   const renderCalendar = () => (
     <View style={styles.calendarContainer}>
       <View style={styles.calendarHeader}>
-        <Text style={styles.calendarTitle}>{currentYear}년 {currentMonth}월</Text>
-        <View style={styles.calendarNavButtons}>
-          <TouchableOpacity onPress={goToPreviousMonth}>
-            <Text style={styles.navButtonText}>{'<'}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={goToCurrentMonth}>
-            <Text style={styles.navButtonText}>현재</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={goToNextMonth}>
-            <Text style={styles.navButtonText}>{'>'}</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity onPress={goToPreviousMonth}>
+          <Text style={styles.monthNavArrow}>{'<'}</Text>
+        </TouchableOpacity>
+        <Text style={styles.calendarTitle}>{currentYear}.{currentMonth}</Text>
+        <TouchableOpacity onPress={goToNextMonth}>
+          <Text style={styles.monthNavArrow}>{'>'}</Text>
+        </TouchableOpacity>
       </View>
-      
       <View style={styles.weekDaysContainer}>
         {weekDays.map((day) => (
           <Text key={day} style={styles.weekDayText}>{day}</Text>
         ))}
       </View>
-      
       <View style={styles.calendarGrid}>
         {calendarData.map((item, index) => (
           <TouchableOpacity
@@ -195,95 +231,99 @@ export const BookingScreen: React.FC = () => {
             style={[
               styles.calendarDay,
               item.day === selectedDate && styles.selectedDay,
-              item.hasBooking && styles.dayWithBooking,
               !item.isSelectable && styles.disabledDay,
-              item.isToday && styles.today,
               !item.isCurrentMonth && styles.otherMonth,
             ]}
             onPress={() => {
               if (!item.isSelectable || !item.day) return;
-              setSelectedDate(item.day);
-              const date = new Date(currentYear, currentMonth - 1, item.day);
-              // 바텀 시트에 표시할 더미 데이터 구성 (API 연동 시 교체)
-              const lessons = [
-                { id: '1', time: '14:30', title: '요가', place: '고려대학교 체육체육관' },
-                { id: '2', time: '15:30', title: '런닝', place: '고려대학교 체육체육관' },
-                { id: '3', time: '16:30', title: '요가', place: '고려대학교 체육체육관' },
-              ];
-              setSheetLessons(lessons);
-              setSheetDateText(`${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`);
-              setShowSheet(true);
+              handleDateSelect(item.day);
             }}
             disabled={!item.isSelectable}
           >
             {item.day && (
-              <Text 
-                style={[
-                  styles.calendarDayText,
-                  item.day === selectedDate && styles.selectedDayText,
-                  item.hasBooking && styles.dayWithBookingText,
-                  !item.isSelectable && styles.disabledDayText,
-                  item.isToday && styles.todayText,
-                  !item.isCurrentMonth && styles.otherMonthText,
-                ]}
-              >
-                {item.day}
-              </Text>
+              <View style={[styles.dayCircle, item.day === selectedDate ? styles.dayCircleSelected : styles.dayCircleDefault]}>
+                <Text 
+                  style={[
+                    styles.calendarDayText,
+                    item.day === selectedDate && styles.selectedDayText,
+                    !item.isSelectable && styles.disabledDayText,
+                    !item.isCurrentMonth && styles.otherMonthText,
+                  ]}
+                >
+                  {item.day}
+                </Text>
+              </View>
             )}
-            {item.hasBooking && <View style={styles.bookingDot} />}
           </TouchableOpacity>
         ))}
       </View>
-    
     </View>
   );
 
+        const renderTimeline = () => {
+      if (!selectedDate) return null;
+      
+      if (loading) {
+        return (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={COLORS.PRIMARY} />
+          </View>
+        );
+      }
+      
+      if (error) {
+        return (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        );
+      }
+      
+      if (dailyLessons.length === 0) {
+        return (
+          <View style={styles.noDataContainer}>
+            <Text style={styles.noDataText}>해당 날짜에 등록된 수업이 없습니다.</Text>
+            <Text style={styles.noDataSubtext}>다른 날짜를 선택해보세요.</Text>
+          </View>
+        );
+      }
+      
+      return (
+        <BookingBottomSheet
+          dateText={`${currentMonth}월 ${selectedDate}일`}
+          lessons={dailyLessons}
+          onSelect={(lesson) => {
+            navigation.navigate(SCREENS.LESSON_DETAIL, { 
+              lessonId: lesson.id, 
+              title: lesson.title,
+              time: lesson.time,
+              date: `${currentMonth}월${selectedDate}일`,
+              place: lesson.place
+            });
+          }}
+          onClose={() => {
+            setSelectedDate(null);
+            setDailyLessons([]);
+          }}
+        />
+      );
+    };
+
   return (
     <View style={styles.container}>
-      {/* 탭 헤더 */}
-      <View style={styles.tabContainer}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'calendar' && styles.activeTab]}
-          onPress={() => setActiveTab('calendar')}
-        >
-          <Text style={[styles.tabText, activeTab === 'calendar' && styles.activeTabText]}>
-            달력 보기
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'sports' && styles.activeTab]}
-          onPress={() => setActiveTab('sports')}
-        >
-          <Text style={[styles.tabText, activeTab === 'sports' && styles.activeTabText]}>
-            종목 선택
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'classes' && styles.activeTab]}
-          onPress={() => setActiveTab('classes')}
-        >
-          <Text style={[styles.tabText, activeTab === 'classes' && styles.activeTabText]}>
-            수업리스트
-          </Text>
-        </TouchableOpacity>
+      <SafeAreaView>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>수업예약</Text>
+        </View>
+      </SafeAreaView>
+      
+      {/* 달력은 항상 고정 */}
+      <View style={styles.fixedCalendarContainer}>
+        {renderCalendar()}
       </View>
-
-      {/* 컨텐츠 */}
-      {activeTab === 'calendar' && renderCalendar()}
-      {activeTab === 'sports' && <SportListScreen />}
-      {activeTab === 'classes' && <LessonListScreen />}
-
-      {showSheet && (
-        <BookingBottomSheet
-          dateText={sheetDateText}
-          lessons={sheetLessons}
-          onSelect={(lesson) => {
-            setShowSheet(false);
-            navigation.navigate(SCREENS.LESSON_DETAIL, { lessonId: lesson.id, title: lesson.title });
-          }}
-          onClose={() => setShowSheet(false)}
-        />
-      )}
+      
+      {/* 수업 리스트는 별도로 렌더링 */}
+      {renderTimeline()}
     </View>
   );
 };
@@ -291,41 +331,26 @@ export const BookingScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.BACKGROUND_SECONDARY,
-  },
-  tabContainer: {
-    flexDirection: 'row',
     backgroundColor: COLORS.WHITE,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.BORDER_LIGHT,
-    shadowColor: COLORS.SHADOW,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
   },
-  tab: {
-    flex: 1,
-    paddingVertical: 18,
-    alignItems: 'center',
-    borderBottomWidth: 3,
-    borderBottomColor: 'transparent',
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 0,
+    paddingBottom: 20,
+    paddingVertical: 10,
+    marginBottom: -17,
+    borderBottomWidth: 1.5,
+    borderBottomColor: '#E2E8EE',
   },
-  activeTab: {
-    borderBottomColor: COLORS.PRIMARY,
-  },
-  tabText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: COLORS.TEXT_SECONDARY,
-  },
-  activeTabText: {
+  headerTitle: {
+    fontSize: 21,
+    fontWeight: '700',
     color: COLORS.PRIMARY,
-    fontWeight: '600',
   },
+  scrollContent: { paddingBottom: 24 },
   bookingList: {
     flex: 1,
-    padding: 24,
+    padding: 30,
   },
   bookingCard: {
     backgroundColor: COLORS.WHITE,
@@ -422,37 +447,26 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     color: COLORS.ERROR,
   },
-  calendarContainer: {
-    flex: 1,
-    padding: 24,
-  },
+  calendarContainer: { paddingHorizontal: 10, paddingTop: 8, paddingBottom: 16 },
   calendarHeader: {
+    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 8,
   },
   calendarTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: COLORS.TEXT_PRIMARY,
-    letterSpacing: -0.3,
+    fontSize: 26,
+    fontWeight: '500',
+    color: '#2B308B',
+    marginHorizontal: 16,
   },
-  calendarNavButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-    marginTop: 16,
-  },
-  navButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.PRIMARY,
-  },
+  monthNavArrow: { fontSize: 24, fontWeight: '300', color: COLORS.PRIMARY },
   weekDaysContainer: {
     flexDirection: 'row',
-    marginBottom: 16,
-    backgroundColor: COLORS.WHITE,
-    borderRadius: 12,
-    paddingVertical: 12,
+    marginBottom: 8,
+    backgroundColor: '#EDF2F8',
+    borderRadius: 20,
+    paddingVertical: 8,
     shadowColor: COLORS.SHADOW,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -462,17 +476,17 @@ const styles = StyleSheet.create({
   weekDayText: {
     flex: 1,
     textAlign: 'center',
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.TEXT_SECONDARY,
+    fontSize: 20,
+    fontWeight: '400',
+    color: '#2B308B',
     paddingVertical: 8,
   },
   calendarGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    backgroundColor: COLORS.WHITE,
-    borderRadius: 16,
-    padding: 16,
+    backgroundColor: '#EDF2F8',
+    borderRadius: 20,
+    padding: 12,
     shadowColor: COLORS.SHADOW,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
@@ -480,25 +494,18 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   calendarDay: {
-    width: '14.28%', // 100% / 7 ≈ 14.28%
-    aspectRatio: 1,
+    width: '14.28%',
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
-    margin: 0,
-    minWidth: 40, // 최소 너비 보장
+    marginVertical: 6,
   },
-  selectedDay: {
-    backgroundColor: COLORS.PRIMARY,
-    borderRadius: 20,
-    shadowColor: COLORS.SHADOW,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 3,
-  },
+  dayCircle: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  dayCircleDefault: { backgroundColor: '#AEC7EB' },
+  dayCircleSelected: { backgroundColor: COLORS.PRIMARY },
+  selectedDay: {},
   dayWithBooking: {
-    backgroundColor: COLORS.PRIMARY_SUBTLE,
+    backgroundColor: '#F2F4FF',
     borderRadius: 20,
   },
   disabledDay: {
@@ -506,86 +513,160 @@ const styles = StyleSheet.create({
   },
   calendarDayText: {
     fontSize: 16,
-    color: COLORS.TEXT_PRIMARY,
-    fontWeight: '500',
+    color: '#FEFEFE',
+    fontWeight: '400',
   },
   selectedDayText: {
-    color: COLORS.WHITE,
-    fontWeight: '700',
+    color: '#FEFEFE',
+    fontWeight: '400',
   },
   dayWithBookingText: {
-    color: COLORS.PRIMARY,
-    fontWeight: '600',
+    color: '#2B308B',
+    fontWeight: '400',
   },
   disabledDayText: {
     color: COLORS.TEXT_TERTIARY,
   },
-  today: {
-    backgroundColor: COLORS.PRIMARY_SUBTLE,
-    borderRadius: 20,
-    borderWidth: 2,
-    borderColor: COLORS.PRIMARY,
-  },
-  todayText: {
-    color: COLORS.PRIMARY,
-    fontWeight: '700',
-  },
+  today: {},
+  todayText: {},
   otherMonth: {
     opacity: 0.3,
   },
   otherMonthText: {
     color: COLORS.TEXT_TERTIARY,
   },
-  bookingDot: {
-    position: 'absolute',
-    bottom: 6,
-    width: 6,
-    height: 6,
-    backgroundColor: COLORS.SUCCESS,
-    borderRadius: 3,
-  },
-  selectedDateInfo: {
-    marginTop: 24,
-    padding: 20,
-    backgroundColor: COLORS.WHITE,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: COLORS.BORDER_LIGHT,
-    shadowColor: COLORS.SHADOW,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 3,
-  },
-  selectedDateText: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: COLORS.TEXT_PRIMARY,
-    marginBottom: 20,
-    textAlign: 'center',
-    letterSpacing: -0.3,
-  },
-  timeSlots: {
-    gap: 12,
-  },
-  timeSlotsTitle: {
-    fontSize: 17,
+     /* Timeline */
+   timelineWrap: { paddingTop: 8, paddingBottom: 24 },
+     timelineRow: { flexDirection: 'row', alignItems: 'stretch', marginBottom: 16, paddingHorizontal: 24 },
+  timelineCol: { width: 32, alignItems: 'center' },
+  timelineLineTop: { flex: 1, width: 2, backgroundColor: '#A7B1CD' },
+  timelineLineBottom: { flex: 1, width: 2, backgroundColor: '#A7B1CD' },
+  timelineDot: { width: 21, height: 21, borderRadius: 10.5, backgroundColor: '#A7B1CD' },
+  lessonCard: { flex: 1, backgroundColor: '#EDF2F8', borderRadius: 20, padding: 16, flexDirection: 'row', alignItems: 'center' },
+  cardLeft: { flex: 1 },
+  cardRight: { width: 110, alignItems: 'flex-end', justifyContent: 'center' },
+  cardThumb: { width: 94, height: 94, borderRadius: 12, backgroundColor: '#AEC7EB' },
+  heartOutline: { position: 'absolute', top: 6, right: 6, width: 28, height: 28, borderWidth: 2, borderColor: COLORS.PRIMARY, borderRadius: 6 },
+  cardTime: { fontSize: 15, color: '#2B308B', marginBottom: 6 },
+  cardTitle: { fontSize: 20, fontWeight: '700', color: '#2B308B', marginBottom: 8 },
+  cardPlace: { fontSize: 13, color: '#696E83', marginBottom: 8 },
+  cardAvailable: { fontSize: 15, color: COLORS.PRIMARY },
+  
+                 // 새로 추가된 스타일들
+     timelineHeader: {
+       flexDirection: 'row',
+       justifyContent: 'center',
+       alignItems: 'center',
+       marginBottom: 20,
+       paddingHorizontal: 24,
+       paddingVertical: 12,
+       backgroundColor: COLORS.WHITE,
+       borderRadius: 16,
+     },
+  timelineTitle: {
+    fontSize: 18,
     fontWeight: '600',
-    color: COLORS.TEXT_PRIMARY,
-    marginBottom: 16,
+    color: '#2B308B',
   },
-  timeSlot: {
-    padding: 16,
-    backgroundColor: COLORS.BACKGROUND_SECONDARY,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: COLORS.BORDER,
+  closeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#E5E7EB',
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  timeSlotText: {
-    fontSize: 15,
-    color: COLORS.TEXT_PRIMARY,
-    fontWeight: '600',
+  closeButtonText: {
+    fontSize: 16,
+    color: '#6B7280',
+    fontWeight: '500',
   },
   
+     // 화살표 관련 스타일들 (피그마 디자인 적용)
+   arrowContainer: {
+     alignItems: 'center',
+     justifyContent: 'center',
+     paddingVertical: 4,
+     paddingHorizontal: 8, // 터치 영역 확대
+     width: '100%', // 전체 너비 사용
+   },
+  arrow: {
+    width: 0,
+    height: 0,
+    backgroundColor: 'transparent',
+    borderStyle: 'solid',
+    borderLeftWidth: 6,
+    borderRightWidth: 6,
+    borderBottomWidth: 8,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: '#5981FA', // 피그마의 파란색
+    transform: [{ rotate: '0deg' }], // 기본: 아래쪽 화살표
+  },
+  arrowUp: {
+    transform: [{ rotate: '180deg' }], // 위쪽 화살표 (180도 회전)
+  },
+  
+               // 수업 리스트 컨테이너
+    lessonListContainer: {
+      flex: 1,
+      backgroundColor: COLORS.WHITE, // 배경색 추가
+      width: '100%', // 화면 전체 너비
+    },
+  
+  // 고정된 달력 컨테이너
+  fixedCalendarContainer: {
+    paddingHorizontal: 10,
+    paddingTop: -10,
+    paddingBottom: 16,
+  },
+  
+  // 스크롤 가능한 수업 리스트
+  scrollableLessonList: {
+    flex: 1,
+  },
+  
+  // 접힌 상 태의 수업 리스트
+  collapsedLessonList: {
+    height: 80,
+    overflow: 'hidden',
+    },
+  
+  // 접힌 상태 텍스트
+  collapsedText: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '400',
+  },
+  errorText: {
+    color: COLORS.ERROR,
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 16,
+  },
+  noDataContainer: {
+    paddingVertical: 20,
+    alignItems: 'center',
+  },
+  noDataText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#2B308B',
+    marginBottom: 8,
+  },
+  noDataSubtext: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '400',
+  },
+  loadingContainer: {
+    paddingVertical: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  errorContainer: {
+    paddingVertical: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

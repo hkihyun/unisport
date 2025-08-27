@@ -7,6 +7,7 @@ export interface User {
   university: string;
   major?: string;
   grade?: number;
+  studentNumber?: string; // 학번 필드 추가
   bio?: string;
   rating: number;
   reviewCount: number;
@@ -117,4 +118,148 @@ export interface LessonFilters {
   };
   location?: string;
   date?: string;
+}
+
+// 레슨 생성 요청 타입
+export interface CreateLessonRequest {
+  sport: string;
+  title: string;
+  description: string;
+  level: number;
+  location: string;
+  instructorUserId: number;
+  lessonDate: string;
+  lessonTime: string;
+}
+
+// 레슨 생성 응답 타입
+export interface CreateLessonResponse {
+  id: number;
+  sport: string;
+  title: string;
+  description: string;
+  level: number;
+  location: string;
+  instructorUserId: number;
+  lessonDate: string;
+  lessonTime: string;
+}
+
+// 백엔드 API 레슨 타입 (GET /lessons/all 응답)
+export interface BackendLesson {
+  id: number;
+  sport: string;
+  title: string;
+  description: string;
+  level: number;
+  location: string;
+  image: string | null;
+  instructorUserId: number;
+  lessonDate: string;
+  lessonTime: string;
+}
+
+// 백엔드 API 수업 상세 타입 (GET /lessons/{id} 응답)
+export interface BackendLessonDetail {
+  id: number;
+  sport: string;
+  title: string;
+  description: string;
+  level: number;
+  location: string;
+  image: string | null;
+  instructorUserId: number;
+  lessonDate: string;
+  lessonTime: string;
+}
+
+// 백엔드 API 리뷰 타입 (GET /review/rating/{lessonId}, GET /review/latest/{lessonId} 응답)
+export interface BackendReview {
+  id: number;
+  lessonId: number;
+  rating: number;
+  reviewContent: string;
+  createdAt: string;
+  userId: number;
+}
+
+export interface BackendReviewResponse {
+  content: BackendReview[];
+  pageable: {
+    pageNumber: number;
+    pageSize: number;
+    sort: {
+      empty: boolean;
+      unsorted: boolean;
+      sorted: boolean;
+    };
+    offset: number;
+    unpaged: boolean;
+    paged: boolean;
+  };
+  totalElements: number;
+  totalPages: number;
+  last: boolean;
+  size: number;
+  number: number;
+  sort: {
+    empty: boolean;
+    unsorted: boolean;
+    sorted: boolean;
+  };
+  numberOfElements: number;
+  first: boolean;
+  empty: boolean;
+}
+
+// 백엔드 API 예약 타입 (GET /reservations/{userId} 응답)
+export interface BackendReservation {
+  id: number;
+  userId: number;
+  lessonId: number;
+  createdAt: string;
+}
+
+// 백엔드 API 예약 생성 요청 타입 (POST /reservations)
+export interface CreateReservationRequest {
+  userId: number;
+  lessonId: number;
+}
+
+// 백엔드 API 예약 생성 응답 타입 (POST /reservations)
+export interface CreateReservationResponse {
+  id: number;
+  userId: number;
+  lessonId: number;
+  createdAt: string;
+}
+
+// 백엔드 API 예약 목록 응답 타입 (GET /reservations/{userId} 응답)
+export interface BackendReservationResponse {
+  content: BackendReservation[];
+  pageable: {
+    pageNumber: number;
+    pageSize: number;
+    sort: {
+      empty: boolean;
+      sorted: boolean;
+      unsorted: boolean;
+    };
+    offset: number;
+    paged: boolean;
+    unpaged: boolean;
+  };
+  totalElements: number;
+  totalPages: number;
+  last: boolean;
+  size: number;
+  number: number;
+  sort: {
+    empty: boolean;
+    sorted: boolean;
+    unsorted: boolean;
+  };
+  numberOfElements: number;
+  first: boolean;
+  empty: boolean;
 }

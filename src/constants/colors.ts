@@ -1,10 +1,10 @@
 // 앱 색상 테마 - 현대적이고 세련된 디자인
 export const COLORS = {
   // 기본 색상 - 모던한 블루 계열
-  PRIMARY: '#2563EB',
-  PRIMARY_DARK: '#1D4ED8',
-  PRIMARY_LIGHT: '#3B82F6',
-  PRIMARY_SUBTLE: '#DBEAFE',
+  PRIMARY: '#5981FA',
+  PRIMARY_DARK: '#375885',
+  PRIMARY_LIGHT: '#7EA3FF',
+  PRIMARY_SUBTLE: '#E7EEFF',
   
   // 보조 색상 - 세련된 그린 계열
   SECONDARY: '#10B981',
@@ -12,17 +12,17 @@ export const COLORS = {
   SECONDARY_LIGHT: '#34D399',
   SECONDARY_SUBTLE: '#D1FAE5',
   
-  // 액센트 색상
-  ACCENT: '#8B5CF6',
-  ACCENT_DARK: '#7C3AED',
-  ACCENT_LIGHT: '#A78BFA',
-  ACCENT_SUBTLE: '#EDE9FE',
+  // 액센트 색상 (보조 블루)
+  ACCENT: '#608EC9',
+  ACCENT_DARK: '#4B76B0',
+  ACCENT_LIGHT: '#8FB3E3',
+  ACCENT_SUBTLE: '#E6F0FB',
   
   // 성공/에러 색상
   SUCCESS: '#10B981',
   ERROR: '#EF4444',
   WARNING: '#F59E0B',
-  INFO: '#3B82F6',
+  INFO: '#5981FA',
   
   // 그레이 스케일 - 모던한 그레이
   WHITE: '#FFFFFF',
@@ -43,6 +43,7 @@ export const COLORS = {
   BACKGROUND_SECONDARY: '#F9FAFB',
   BACKGROUND_TERTIARY: '#F3F4F6',
   BACKGROUND_CARD: '#FFFFFF',
+  BACKGROUND_SUCCESS: '#F0FDF4',
   
   // 텍스트 색상
   TEXT_PRIMARY: '#111827',
@@ -50,6 +51,8 @@ export const COLORS = {
   TEXT_TERTIARY: '#6B7280',
   TEXT_INVERSE: '#FFFFFF',
   TEXT_MUTED: '#9CA3AF',
+  // 브랜드 텍스트 색
+  TEXT_BRAND: '#2B308B',
   
   // 테두리 색상
   BORDER: '#E5E7EB',

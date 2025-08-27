@@ -2,6 +2,7 @@
 export const AUTH_SCREENS = {
   LOGIN: 'Login',
   REGISTER: 'Register',
+  SIGNUP: 'Register', // SIGNUP을 REGISTER와 동일하게 매핑
   FORGOT_PASSWORD: 'ForgotPassword',
 } as const;
 
@@ -36,7 +37,6 @@ export const BOOKING_SCREENS = {
   PAYMENT: 'Payment',
   SCHEDULE_LIST: 'ScheduleList',
   SPORT_LIST: 'SportList',
-  SPORT_LESSONS: 'SportLessons',
   BOOKING_CONFIRM: 'BookingConfirm',
 } as const;
 

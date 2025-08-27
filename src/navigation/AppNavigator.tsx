@@ -1,24 +1,27 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+// NavigationContainer is now provided at the root (App.tsx)
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { View, Text, StyleSheet, Platform, StatusBar } from 'react-native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { BlurView } from 'expo-blur';
 import { SCREENS } from '../constants/screens';
 import { COLORS } from '../constants/colors';
 import { useAuth } from '../hooks/useAuth';
+import { HomeIcon, CalendarDaysIcon, ListBulletIcon, UserIcon } from 'react-native-heroicons/solid';
+import BottomTabBar from '../components/BottomTabBar';
 
 // 실제 화면 컴포넌트들
 import { HomeScreen } from '../screens/HomeScreen';
 import { LoginScreen } from '../screens/LoginScreen';
+import { SignupScreen } from '../screens/SignupScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { BookingScreen } from '../screens/BookingScreen';
 import { PaymentScreen } from '../screens/PaymentScreen';
 import { FavoritesScreen } from '../screens/FavoritesScreen';
 import ScheduleListScreen from '../screens/ScheduleListScreen';
 import SportListScreen from '../screens/SportListScreen';
-import SportLessonsScreen from '../screens/SportLessonsScreen';
+import LessonListScreen from '../screens/LessonListScreen';
 import BookingDetailScreen from '../screens/BookingDetailScreen';
 import BookingConfirmScreen from '../screens/BookingConfirmScreen';
 import InstructorVerifyScreen from '../screens/InstructorVerifyScreen';
@@ -36,10 +39,10 @@ const TempScreen: React.FC<{ title: string }> = ({ title }) => (
 type RootStackParamList = {
   [SCREENS.LOGIN]: undefined;
   [SCREENS.REGISTER]: undefined;
-  [SCREENS.HOME]: undefined;
-  [SCREENS.FAVORITES]: undefined;
-  [SCREENS.BOOKINGS]: undefined;
-  [SCREENS.PROFILE]: undefined;
+  Home: undefined;
+  Favorites: undefined;
+  Bookings: undefined;
+  Profile: undefined;
   [SCREENS.LESSON_DETAIL]: { lessonId: string };
   [SCREENS.INSTRUCTOR_PROFILE]: { instructorId: string };
   [SCREENS.CREATE_LESSON]: undefined;
@@ -48,7 +51,6 @@ type RootStackParamList = {
   [SCREENS.PAYMENT]: undefined;
   [SCREENS.SCHEDULE_LIST]: { date: string };
   [SCREENS.SPORT_LIST]: undefined;
-  [SCREENS.SPORT_LESSONS]: { sport: string; date?: string };
   [SCREENS.BOOKING_CONFIRM]: { type: 'book' | 'wish'; lessonId: string };
   [SCREENS.INSTRUCTOR_VERIFY]: undefined;
   [SCREENS.CREATE_LESSON_INFO]: undefined;
@@ -57,10 +59,21 @@ type RootStackParamList = {
 
 // 탭 네비게이터 타입 정의
 type MainTabParamList = {
-  [SCREENS.HOME]: undefined;
-  [SCREENS.FAVORITES]: undefined;
-  [SCREENS.BOOKINGS]: undefined;
-  [SCREENS.PROFILE]: undefined;
+  Home: undefined;
+  Favorites: undefined;
+  Bookings: undefined;
+  Profile: undefined;
+};
+
+
+// ✅ 커스텀 탭바 (BlurView 적용)
+const CustomTabBar = (props: any) => {
+  return (
+    <View style={styles.container}>
+      <BlurView intensity={60} tint="light" style={StyleSheet.absoluteFill} />
+      <BottomTabBar {...props} />
+    </View>
+  );
 };
 
 // 웹에서는 createStackNavigator, 모바일에서는 createNativeStackNavigator 사용
@@ -74,33 +87,26 @@ const MainTabNavigator: React.FC = () => {
   return (
     <Tab.Navigator
       screenOptions={{
-        tabBarActiveTintColor: COLORS.PRIMARY,
-        tabBarInactiveTintColor: COLORS.TEXT_SECONDARY,
+        headerShown: false,
+        tabBarActiveTintColor: '#2B308B',
+        tabBarInactiveTintColor: '#608EC9',
         tabBarStyle: {
-          backgroundColor: COLORS.WHITE,
-          borderTopColor: COLORS.BORDER_LIGHT,
-          borderTopWidth: 1,
-          paddingBottom: 8,
-          paddingTop: 8,
-          height: 80,
-          shadowColor: COLORS.SHADOW,
-          shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.1,
-          shadowRadius: 12,
-          elevation: 8,
+          height: 85,
+          backgroundColor: 'transparent',
+          borderTopWidth: 0,
+          elevation: 0,
+          shadowOpacity: 0,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '600',
+          fontSize: 10,
+          fontWeight: '400',
           marginTop: 4,
         },
         headerStyle: {
-          backgroundColor: COLORS.WHITE,
+          backgroundColor: 'transparent',
           borderBottomColor: COLORS.BORDER_LIGHT,
-          borderBottomWidth: 1,
           shadowColor: COLORS.SHADOW,
           shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.05,
           shadowRadius: 8,
           elevation: 2,
         },
@@ -112,37 +118,50 @@ const MainTabNavigator: React.FC = () => {
         },
         headerTintColor: COLORS.PRIMARY,
       }}
+      tabBar={(props) => <CustomTabBar {...props} />}
     >
       <Tab.Screen
-        name={SCREENS.HOME}
+        name="Home"
         component={HomeScreen}
         options={{
           title: '홈',
           tabBarLabel: '홈',
+          tabBarIcon: ({ color }) => (
+            <HomeIcon size={32} color={color} />
+          ),
         }}
       />
       <Tab.Screen
-        name={SCREENS.BOOKINGS}
+        name="Bookings"
         component={BookingScreen}
         options={{
           title: '수업예약',
           tabBarLabel: '수업예약',
+          tabBarIcon: ({ color }) => (
+            <CalendarDaysIcon size={32} color={color} />
+          ),
         }}
       />
       <Tab.Screen
-        name={SCREENS.FAVORITES}
-        component={FavoritesScreen}
+        name="Favorites"
+        component={LessonListScreen}
         options={{
-          title: '내 수업',
-          tabBarLabel: '내 수업',
+          title: '수업리스트',
+          tabBarLabel: '수업리스트',
+          tabBarIcon: ({ color }) => (
+            <ListBulletIcon size={32} color={color} />
+          ),
         }}
       />
       <Tab.Screen
-        name={SCREENS.PROFILE}
-        component={({ navigation }: any) => <ProfileScreen navigation={navigation} />}
+        name="Profile"
+        component={ProfileScreen}
         options={{
           title: '마이',
           tabBarLabel: '마이',
+          tabBarIcon: ({ color }) => (
+            <UserIcon size={32} color={color} />
+          ),
         }}
       />
     </Tab.Navigator>
@@ -151,7 +170,7 @@ const MainTabNavigator: React.FC = () => {
 
 // 메인 앱 네비게이터
 const AppNavigator: React.FC = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, isJustLoggedIn } = useAuth();
 
   // 로딩 중일 때는 로딩 화면 표시
   if (isLoading) {
@@ -163,40 +182,34 @@ const AppNavigator: React.FC = () => {
   }
 
   return (
-    <SafeAreaProvider>
-      <StatusBar 
-        barStyle="dark-content"
-        backgroundColor="transparent"
-        translucent={true}
-      />
-      <NavigationContainer>
+    <>
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.WHITE} translucent={false} />
         <Stack.Navigator
           screenOptions={{
-            headerStyle: {
-              backgroundColor: COLORS.WHITE,
-              borderBottomColor: COLORS.BORDER_LIGHT,
-              borderBottomWidth: 1,
-              shadowColor: COLORS.SHADOW,
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.05,
-              shadowRadius: 8,
-              elevation: 2,
-            },
-            headerTitleStyle: {
-              color: COLORS.TEXT_PRIMARY,
-              fontWeight: '700',
-              fontSize: 18,
-              letterSpacing: -0.3,
-            },
-            headerTintColor: COLORS.PRIMARY,
+            headerShown: false,
+            contentStyle: { paddingTop: 0, backgroundColor: COLORS.WHITE },
           }}
+          initialRouteName="Home" // 항상 홈화면으로 시작
         >
-          {/** 로그인은 프로필 탭 내부에서 처리할 수 있도록, 인증 여부와 무관하게 메인 탭을 항상 루트로 표시 */}
+          {/** 메인 탭 네비게이터 (항상 접근 가능) */}
           <Stack.Screen
-            name={SCREENS.HOME}
+            name="Home"
             component={MainTabNavigator}
             options={{ headerShown: false }}
           />
+          
+          {/** 로그인과 회원가입 화면 (필요할 때만 접근) */}
+          <Stack.Screen
+            name={SCREENS.LOGIN}
+            component={LoginScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name={SCREENS.REGISTER}
+            component={SignupScreen}
+            options={{ headerShown: false }}
+          />
+          
           <Stack.Screen
             name={SCREENS.LESSON_DETAIL}
             component={BookingDetailScreen}
@@ -238,11 +251,6 @@ const AppNavigator: React.FC = () => {
             options={{ title: '종목 선택' }}
           />
           <Stack.Screen
-            name={SCREENS.SPORT_LESSONS}
-            component={SportLessonsScreen}
-            options={{ title: '수업 목록' }}
-          />
-          <Stack.Screen
             name={SCREENS.BOOKING_CONFIRM}
             component={BookingConfirmScreen}
             options={{ title: '예약/관심 확인' }}
@@ -263,12 +271,20 @@ const AppNavigator: React.FC = () => {
             options={{ title: '수업 개설 완료' }}
           />
         </Stack.Navigator>
-      </NavigationContainer>
-    </SafeAreaProvider>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    overflow: 'hidden',
+    borderTopWidth: 0,
+    elevation: 0,
+  },
   screen: {
     flex: 1,
     justifyContent: 'center',

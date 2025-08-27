@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ApiResponse, PaginatedResponse, PaginationParams } from '../types';
 
 // API 기본 설정
-const API_BASE_URL = 'https://unisportserver.onrender.com';
+const API_BASE_URL = 'https://unisportserver-develop.onrender.com';
 
 // HTTP 메서드 타입
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
@@ -74,7 +74,12 @@ class ApiClient {
         throw new Error(data.message || `HTTP error! status: ${response.status}`);
       }
 
-      return data;
+      // 성공 시 ApiResponse 형태로 감싸서 반환
+      return {
+        success: true,
+        data: data,
+        message: data.message
+      };
     } catch (error) {
       console.error('API request failed:', error);
       return {
@@ -153,7 +158,9 @@ export const API_ENDPOINTS = {
   // 수업 관련
   LESSONS: {
     BASE: '/lessons',
-    CREATE: '/lessons',
+    CREATE: '/lesson',
+    ALL: '/lessons/all',
+    BY_DATE: '/lessons/by-date',
     SEARCH: '/lessons/search',
     BY_INSTRUCTOR: '/lessons/instructor',
     BY_SPORT: '/lessons/sport',
@@ -165,6 +172,12 @@ export const API_ENDPOINTS = {
     CREATE: '/bookings',
     BY_USER: '/bookings/user',
     BY_LESSON: '/bookings/lesson',
+  },
+  
+  // 예약 관련 (새로운 엔드포인트)
+  RESERVATIONS: {
+    BASE: '/reservations',
+    BY_USER: '/reservations',
   },
   
   // 리뷰 관련
