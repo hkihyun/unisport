@@ -11,6 +11,7 @@ export interface User {
   bio?: string;
   rating: number;
   reviewCount: number;
+  isInstructor?: boolean; // 강사 여부 필드 추가
   createdAt: string;
   updatedAt: string;
 }

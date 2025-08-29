@@ -27,6 +27,7 @@ import BookingConfirmScreen from '../screens/BookingConfirmScreen';
 import InstructorVerifyScreen from '../screens/InstructorVerifyScreen';
 import CreateLessonInfoScreen from '../screens/CreateLessonInfoScreen';
 import CreateLessonCompleteScreen from '../screens/CreateLessonCompleteScreen';
+import OpenLessonsScreen from '../screens/OpenLessonsScreen';
 
 // 임시 화면 컴포넌트 (아직 만들지 않은 화면들용)
 const TempScreen: React.FC<{ title: string }> = ({ title }) => (
@@ -55,6 +56,7 @@ type RootStackParamList = {
   [SCREENS.INSTRUCTOR_VERIFY]: undefined;
   [SCREENS.CREATE_LESSON_INFO]: undefined;
   [SCREENS.CREATE_LESSON_COMPLETE]: { title: string; date: string; time: string; place: string };
+  [SCREENS.OPEN_LESSONS]: undefined;
 };
 
 // 탭 네비게이터 타입 정의
@@ -269,6 +271,11 @@ const AppNavigator: React.FC = () => {
             name={SCREENS.CREATE_LESSON_COMPLETE}
             component={CreateLessonCompleteScreen}
             options={{ title: '수업 개설 완료' }}
+          />
+          <Stack.Screen
+            name={SCREENS.OPEN_LESSONS}
+            component={OpenLessonsScreen}
+            options={{ title: '개설 수업' }}
           />
         </Stack.Navigator>
     </>

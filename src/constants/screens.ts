@@ -57,6 +57,7 @@ export const LESSON_SCREENS = {
   INSTRUCTOR_VERIFY: 'InstructorVerify',
   CREATE_LESSON_INFO: 'CreateLessonInfo',
   CREATE_LESSON_COMPLETE: 'CreateLessonComplete',
+  OPEN_LESSONS: 'OpenLessons',
 } as const;
 
 // 관심수업 관련 화면

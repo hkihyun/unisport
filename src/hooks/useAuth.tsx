@@ -143,6 +143,7 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
           email: response.data.email,
           university: response.data.university,
           studentNumber: response.data.studentNumber, // 학번 필드 추가
+          isInstructor: (response.data as any).isInstructor || false, // 강사 여부 필드 (DB에서 가져온 값 또는 기본값 false)
           major: '',
           grade: 0,
           bio: '',

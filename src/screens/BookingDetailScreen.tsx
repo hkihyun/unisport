@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator, Alert, SafeAreaView } from 'react-native';
 import { SCREENS } from '../constants/screens';
 import { StarIcon, HeartIcon as HeartIconSolid } from 'react-native-heroicons/solid';
 import { HeartIcon as HeartIconOutline } from 'react-native-heroicons/outline';
@@ -8,12 +8,15 @@ import { AuthService, InstructorResponse } from '../services/authService';
 import { ReservationService } from '../services/reservationService';
 import { BackendLessonDetail, BackendReview, BackendReviewResponse } from '../types';
 import { useAuth } from '../hooks/useAuth';
+import { DifficultyLevel } from '../../assets/icons/DifficultyIcon';
+import { LeftArrowBlue } from '../../assets/icons/LeftArrow_blue';
+import { Header } from '../components/Header';
 
 const { width } = Dimensions.get('window');
 
 export const BookingDetailScreen: React.FC<any> = ({ navigation, route }) => {
 	const { lessonId } = route.params;
-	const { isAuthenticated } = useAuth(); // 로그인 상태 확인
+	const { isAuthenticated, user } = useAuth(); // 로그인 상태와 사용자 정보 확인
 	const [selectedSort, setSelectedSort] = useState<'recommended' | 'latest'>('recommended');
 	const [isHeartPressed, setIsHeartPressed] = useState(false);
 	const [lessonDetail, setLessonDetail] = useState<BackendLessonDetail | null>(null);
@@ -99,9 +102,14 @@ export const BookingDetailScreen: React.FC<any> = ({ navigation, route }) => {
 		try {
 			setIsReserving(true);
 			
-			// 임시로 userId 1을 사용 (실제로는 로그인된 사용자 ID를 사용해야 함)
+			// 로그인된 사용자의 ID 사용
+			if (!user) {
+				Alert.alert('오류', '사용자 정보를 찾을 수 없습니다.');
+				return;
+			}
+			
 			const reservationRequest = {
-				userId: 1,
+				userId: parseInt(user.id),
 				lessonId: lessonDetail.id
 			};
 
@@ -143,22 +151,7 @@ export const BookingDetailScreen: React.FC<any> = ({ navigation, route }) => {
 		);
 	}
 
-	// 난이도에 따른 박스 개수 계산
-	const getDifficultyBoxes = (level: number) => {
-		const boxes = [];
-		for (let i = 1; i <= 5; i++) {
-			boxes.push(
-				<View 
-					key={i} 
-					style={[
-						styles.difficultyBox, 
-						i <= level ? styles.difficultyFilled : styles.difficultyEmpty
-					]} 
-				/>
-			);
-		}
-		return boxes;
-	};
+	// 난이도에 따른 박스 개수 계산 - DifficultyIcon으로 대체됨
 
 	// 난이도 텍스트 변환
 	const getDifficultyText = (level: number) => {
@@ -174,14 +167,16 @@ export const BookingDetailScreen: React.FC<any> = ({ navigation, route }) => {
 	
 	return (
 		<View style={styles.container}>
+			<Header
+				title="수업예약"
+				showLogo={false}
+				customIcon={
+					<TouchableOpacity onPress={() => navigation.goBack()}>
+					   <LeftArrowBlue width={32} height={32} />
+					</TouchableOpacity>
+				}
+			/>
 			
-			{/* 헤더 */}
-			<View style={styles.header}>
-				<Text style={styles.headerTitle}>수업예약</Text>
-			</View>
-			
-			{/* 구분선 */}
-			<View style={styles.headerDivider} />
 			
 			{/* 상단 고정 영역 */}
 			<View style={styles.fixedTopSection}>
@@ -240,7 +235,7 @@ export const BookingDetailScreen: React.FC<any> = ({ navigation, route }) => {
 					<View style={styles.difficultyHeader}>
 						<Text style={styles.sectionTitle}>수업 난이도</Text>
 						<View style={styles.difficultyIndicator}>
-							{getDifficultyBoxes(lessonDetail.level)}
+							<DifficultyLevel level={lessonDetail.level as 1 | 2 | 3 | 4 | 5} size={35} color="#5981FA" />
 						</View>
 					</View>
 				</View>
@@ -316,6 +311,7 @@ export const BookingDetailScreen: React.FC<any> = ({ navigation, route }) => {
 					
 					{/* 정렬 옵션 */}
 					<View style={styles.sortOptions}>
+						<Text style={styles.sortDot}>•</Text>
 						<TouchableOpacity 
 							onPress={() => handleSortChange('recommended')}
 							style={styles.sortOption}
@@ -388,6 +384,7 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		backgroundColor: '#FEFEFE',
+		paddingTop: 59,
 	},
 	
 	
@@ -510,8 +507,8 @@ const styles = StyleSheet.create({
 		fontSize: 18,
 		fontWeight: '600',
 		color: '#2B308B',
-		lineHeight: 22,
-		marginBottom: 15,
+		lineHeight: 35,
+		marginBottom: 0,
 	},
 	
 	// 난이도
@@ -528,32 +525,7 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 		gap: 4,
 	},
-	difficultyBox: {
-		width: 0,
-		height: 0,
-		borderLeftWidth: 17,
-		borderRightWidth: 17,
-		borderBottomWidth: 34,
-		borderLeftColor: 'transparent',
-		borderRightColor: 'transparent',
-		borderBottomColor: '#D0DEEC',
-		borderTopLeftRadius: 2,
-		borderTopRightRadius: 2,
-		borderBottomLeftRadius: 2,
-		borderBottomRightRadius: 2,
-	},
-	difficultyFilled: {
-		borderBottomColor: '#5981FA',
-	},
-	difficultyEmpty: {
-		borderBottomColor: '#D0DEEC',
-	},
-	difficultyText: {
-		fontSize: 13,
-		color: '#6A6A6A',
-		lineHeight: 17,
-		marginTop: 8,
-	},
+	// difficultyBox 관련 스타일은 DifficultyIcon으로 대체되어 제거됨
 	
 	// 설명
 	descriptionSection: {
@@ -654,20 +626,20 @@ const styles = StyleSheet.create({
 	reviewHeader: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		marginBottom: 16,
+		marginBottom: 10,
 	},
 	reviewCount: {
 		fontSize: 18,
 		color: '#696E83',
 		lineHeight: 22,
 		marginLeft: 8,
-		marginTop: -14,
+		marginTop: 0,
 	},
 	sortOptions: {
 		flexDirection: 'row',
 		alignItems: 'center',
 		marginBottom: 16,
-		left: 10,
+		left: -10,
 
 	},
 	sortOption: {
@@ -677,6 +649,7 @@ const styles = StyleSheet.create({
 		fontSize: 12,
 		color: '#2B308B',
 		lineHeight: 12,
+		marginLeft: -5,
 	},
 	sortTextActive: {
 		color: '#5981FA',

@@ -7,6 +7,8 @@ import { COLORS } from '../constants/colors';
 import { LessonService } from '../services/lessonService';
 import { BackendLesson } from '../types';
 import { BookingBottomSheet } from './BookingBottomSheet';
+import { Header } from '../components/Header';
+
 
 // 임시 예약 데이터 (기존 예약 목록용)
 const mockBookings = [
@@ -76,6 +78,7 @@ const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
 export const BookingScreen: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<number | null>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [bottomSheetVisible, setBottomSheetVisible] = useState(false); // 바텀시트 표시 상태 추가
   const navigation = useNavigation<any>();
   const [dailyLessons, setDailyLessons] = useState(
     [] as Array<{ id: string; time: string; title: string; place: string; available?: boolean }>
@@ -130,11 +133,8 @@ export const BookingScreen: React.FC = () => {
         
         setDailyLessons(convertedLessons);
         
-        // 데이터가 있을 때만 상태 업데이트
-        if (convertedLessons.length > 0) {
-          // 애니메이션 없이 바로 표시
-        }
-        // 수업이 없어도 selectedDate는 유지하여 "수업이 없습니다" 메시지가 표시되도록 함
+        // 수업이 있든 없든 바텀시트 표시 (수업이 없으면 "수업이 없습니다" 메시지 표시)
+        setBottomSheetVisible(true);
       } catch (err) {
         setError('수업 데이터를 불러올 수 없습니다.');
         console.error(err);
@@ -219,78 +219,57 @@ export const BookingScreen: React.FC = () => {
           <Text style={styles.monthNavArrow}>{'>'}</Text>
         </TouchableOpacity>
       </View>
-      <View style={styles.weekDaysContainer}>
-        {weekDays.map((day) => (
-          <Text key={day} style={styles.weekDayText}>{day}</Text>
-        ))}
-      </View>
-      <View style={styles.calendarGrid}>
-        {calendarData.map((item, index) => (
-          <TouchableOpacity
-            key={index}
-            style={[
-              styles.calendarDay,
-              item.day === selectedDate && styles.selectedDay,
-              !item.isSelectable && styles.disabledDay,
-              !item.isCurrentMonth && styles.otherMonth,
-            ]}
-            onPress={() => {
-              if (!item.isSelectable || !item.day) return;
-              handleDateSelect(item.day);
-            }}
-            disabled={!item.isSelectable}
-          >
-            {item.day && (
-              <View style={[styles.dayCircle, item.day === selectedDate ? styles.dayCircleSelected : styles.dayCircleDefault]}>
-                <Text 
-                  style={[
-                    styles.calendarDayText,
-                    item.day === selectedDate && styles.selectedDayText,
-                    !item.isSelectable && styles.disabledDayText,
-                    !item.isCurrentMonth && styles.otherMonthText,
-                  ]}
-                >
-                  {item.day}
-                </Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        ))}
+      
+      {/* 통합된 달력 배경 */}
+      <View style={styles.unifiedCalendarBackground}>
+        <View style={styles.weekDaysContainer}>
+          {weekDays.map((day) => (
+            <Text key={day} style={styles.weekDayText}>{day}</Text>
+          ))}
+        </View>
+        <View style={styles.calendarGrid}>
+          {calendarData.map((item, index) => (
+            <TouchableOpacity
+              key={index}
+              style={[
+                styles.calendarDay,
+                item.day === selectedDate && styles.selectedDay,
+                !item.isSelectable && styles.disabledDay,
+                !item.isCurrentMonth && styles.otherMonth,
+              ]}
+              onPress={() => {
+                if (!item.isSelectable || !item.day) return;
+                handleDateSelect(item.day);
+              }}
+              disabled={!item.isSelectable}
+            >
+              {item.day && (
+                <View style={[styles.dayCircle, item.day === selectedDate ? styles.dayCircleSelected : styles.dayCircleDefault]}>
+                  <Text 
+                    style={[
+                      styles.calendarDayText,
+                      item.day === selectedDate && styles.selectedDayText,
+                      !item.isSelectable && styles.disabledDayText,
+                      !item.isCurrentMonth && styles.otherMonthText,
+                    ]}
+                  >
+                    {item.day}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
     </View>
   );
 
-        const renderTimeline = () => {
-      if (!selectedDate) return null;
-      
-      if (loading) {
-        return (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={COLORS.PRIMARY} />
-          </View>
-        );
-      }
-      
-      if (error) {
-        return (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>{error}</Text>
-          </View>
-        );
-      }
-      
-      if (dailyLessons.length === 0) {
-        return (
-          <View style={styles.noDataContainer}>
-            <Text style={styles.noDataText}>해당 날짜에 등록된 수업이 없습니다.</Text>
-            <Text style={styles.noDataSubtext}>다른 날짜를 선택해보세요.</Text>
-          </View>
-        );
-      }
-      
+        	const renderTimeline = () => {
+      // BookingBottomSheet는 항상 렌더링하되, visible prop으로 제어
       return (
         <BookingBottomSheet
-          dateText={`${currentMonth}월 ${selectedDate}일`}
+          visible={bottomSheetVisible}
+          dateText={selectedDate ? `${currentMonth}월 ${selectedDate}일` : ''}
           lessons={dailyLessons}
           onSelect={(lesson) => {
             navigation.navigate(SCREENS.LESSON_DETAIL, { 
@@ -302,8 +281,7 @@ export const BookingScreen: React.FC = () => {
             });
           }}
           onClose={() => {
-            setSelectedDate(null);
-            setDailyLessons([]);
+            setBottomSheetVisible(false); // 바텀시트만 내리기
           }}
         />
       );
@@ -311,10 +289,8 @@ export const BookingScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <SafeAreaView>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>수업예약</Text>
-        </View>
+      <SafeAreaView>      
+        <Header title="수업예약" showLogo={false} />
       </SafeAreaView>
       
       {/* 달력은 항상 고정 */}
@@ -464,19 +440,12 @@ const styles = StyleSheet.create({
   weekDaysContainer: {
     flexDirection: 'row',
     marginBottom: 8,
-    backgroundColor: '#EDF2F8',
-    borderRadius: 20,
     paddingVertical: 8,
-    shadowColor: COLORS.SHADOW,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
   },
   weekDayText: {
     flex: 1,
     textAlign: 'center',
-    fontSize: 20,
+    fontSize: 17,
     fontWeight: '400',
     color: '#2B308B',
     paddingVertical: 8,
@@ -484,9 +453,11 @@ const styles = StyleSheet.create({
   calendarGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    padding: 12,
+  },
+  unifiedCalendarBackground: {
     backgroundColor: '#EDF2F8',
     borderRadius: 20,
-    padding: 12,
     shadowColor: COLORS.SHADOW,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
@@ -617,8 +588,8 @@ const styles = StyleSheet.create({
   // 고정된 달력 컨테이너
   fixedCalendarContainer: {
     paddingHorizontal: 10,
-    paddingTop: -10,
     paddingBottom: 16,
+    paddingTop: -30,
   },
   
   // 스크롤 가능한 수업 리스트

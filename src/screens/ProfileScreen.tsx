@@ -1,6 +1,7 @@
 // React와 React Native의 핵심 컴포넌트들을 가져옵니다
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView, TextInput, StatusBar, Dimensions } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 // React Navigation의 타입 정의를 가져옵니다
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -12,6 +13,7 @@ import { useAuth } from '../hooks/useAuth';
 import { SCREENS } from '../constants/screens';
 // 프로필 아이콘 컴포넌트를 가져옵니다
 import { ProfileIcon } from '../../assets/icons/ProfileIcon';
+import { InstructorService } from '../services/instructorService';
 
 // 네비게이션 타입 정의
 type RootStackParamList = {
@@ -20,6 +22,7 @@ type RootStackParamList = {
   Home: undefined;
   [SCREENS.INSTRUCTOR_VERIFY]: undefined;
   [SCREENS.CREATE_LESSON_INFO]: undefined;
+  [SCREENS.OPEN_LESSONS]: undefined;
   [SCREENS.PAYMENT]: undefined;
 };
 
@@ -92,10 +95,70 @@ export const ProfileScreen: React.FC = () => {
   React.useEffect(() => {
     const params = route.params as RouteParams;
     if (params?.instructorVerified) {
+      console.log('🎉 강사 인증 완료 감지!');
       setIsInstructorVerified(true); // 강사 인증 완료 상태로 설정
       // 탭 네비게이션에서는 setParams가 작동하지 않으므로 제거
     }
   }, [route?.params]);
+
+  // 강사 인증 상태를 AsyncStorage와 서버에서 확인
+  useEffect(() => {
+    const checkInstructorVerificationStatus = async () => {
+      try {
+        // 1. AsyncStorage에서 확인 (기존 강사 인증 기록)
+        const instructorVerified = await AsyncStorage.getItem('instructorVerified');
+        console.log('🔍 AsyncStorage 강사 인증 상태 확인:', instructorVerified);
+        
+        if (instructorVerified === 'true') {
+          console.log('🎉 AsyncStorage에서 강사 인증 완료 상태 확인!');
+          setIsInstructorVerified(true);
+          return;
+        }
+        
+        // 2. AsyncStorage에 없으면 서버에서 확인
+        if (isAuthenticated && user?.id) {
+          console.log('🔄 서버에서 강사 인증 상태 확인 시도');
+          const response = await InstructorService.checkUserInstructorStatus(parseInt(user.id));
+          
+          if (response.success && response.isInstructor) {
+            console.log('🎉 서버에서 강사 인증 완료 상태 확인!');
+            setIsInstructorVerified(true);
+            // AsyncStorage에도 저장
+            await AsyncStorage.setItem('instructorVerified', 'true');
+          } else {
+            console.log('⚠️ 서버에서 강사 인증 미완료 상태 확인');
+            setIsInstructorVerified(false);
+          }
+        }
+      } catch (error) {
+        console.error('강사 인증 상태 확인 중 오류:', error);
+        setIsInstructorVerified(false);
+      }
+    };
+
+    checkInstructorVerificationStatus();
+  }, [isAuthenticated, user]);
+
+  // 화면이 포커스될 때마다 강사 인증 상태 재확인
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      console.log('🔄 ProfileScreen 포커스 - 강사 인증 상태 재확인');
+      const checkStatus = async () => {
+        try {
+          const instructorVerified = await AsyncStorage.getItem('instructorVerified');
+          console.log('🔄 포커스 시 AsyncStorage 상태:', instructorVerified);
+          if (instructorVerified === 'true') {
+            setIsInstructorVerified(true);
+          }
+        } catch (error) {
+          console.error('포커스 시 상태 확인 오류:', error);
+        }
+      };
+      checkStatus();
+    });
+
+    return unsubscribe;
+  }, [navigation]);
 
   // 인증 상태 변경 감지
   React.useEffect(() => {
@@ -104,6 +167,8 @@ export const ProfileScreen: React.FC = () => {
       setIsInstructorVerified(false);
     }
   }, [isAuthenticated]);
+
+
 
   // 로그인 처리 함수
   const handleLogin = async () => {
@@ -137,6 +202,15 @@ export const ProfileScreen: React.FC = () => {
             try {
               await logout(); // 실제 로그아웃 처리
               setIsInstructorVerified(false); // 강사 인증 상태도 초기화
+              
+              // AsyncStorage의 강사 인증 상태도 초기화
+              try {
+                await AsyncStorage.removeItem('instructorVerified');
+                console.log('✅ AsyncStorage 강사 인증 상태 초기화 완료');
+              } catch (error) {
+                console.error('AsyncStorage 초기화 중 오류:', error);
+              }
+              
               // 로그아웃 후 네비게이션 상태를 초기화하여 홈 화면으로 이동
               navigation.reset({
                 index: 0,
@@ -164,18 +238,26 @@ export const ProfileScreen: React.FC = () => {
 
   // 수업 개설 화면으로 이동하는 함수
   const handleCreateLesson = () => {
+    console.log('🔍 수업 개설하기 버튼 클릭');
+    console.log('🔐 인증 상태:', isAuthenticated);
+    console.log('📋 강사 인증 상태:', isInstructorVerified);
+    
     // 로그인하지 않은 상태에서는 로그인 안내
     if (!isAuthenticated) {
+      console.log('❌ 로그인 필요');
       Alert.alert('로그인 필요', '수업을 개설하려면 먼저 로그인해주세요.');
       return;
     }
     
     // 강사 인증이 완료되지 않았으면 경고 메시지 표시
     if (!isInstructorVerified) {
+      console.log('❌ 강사 인증 필요');
       Alert.alert('강사 인증 필요', '수업을 개설하려면 먼저 강사 인증을 완료해주세요.');
       return;
     }
+    
     // 강사 인증이 완료되었으면 수업 개설 화면으로 이동
+    console.log('✅ 강사 인증 완료 - 수업 개설 화면으로 이동');
     navigation.navigate(SCREENS.CREATE_LESSON_INFO);
   };
 
@@ -201,24 +283,38 @@ export const ProfileScreen: React.FC = () => {
         
         {/* 수업 개설하기 메뉴 - 강사 인증 완료 시 활성화됨 */}
         <TouchableOpacity 
-          style={[
-            styles.menuItem, 
-            isInstructorVerified === true ? styles.menuItemActive : undefined
-          ]} 
+          style={styles.menuItem} 
           onPress={handleCreateLesson}
         >
-          <View style={[
-            styles.menuIcon,
-            isInstructorVerified === true ? styles.menuIconActive : undefined
-          ]}>
+          <View style={styles.menuIcon}>
             <Text style={styles.menuIconText}>➕</Text> {/* 플러스 이모지로 추가/생성을 나타냄 */}
           </View>
-          <Text style={[
-            styles.menuText,
-            isInstructorVerified === true ? styles.menuTextActive : undefined
-          ]}>
-            수업 개설하기
-            {isInstructorVerified === true ? ' 완료' : ''}
+          <Text style={styles.menuText}>
+            수업 개설하기 {isInstructorVerified ? '(인증완료)' : '(인증필요)'}
+          </Text>
+          <Text style={styles.menuArrow}>{'›'}
+          </Text>
+        </TouchableOpacity>
+        
+        {/* 디버깅용: 강사 인증 상태 확인 버튼 (임시) */}
+        <TouchableOpacity 
+          style={styles.menuItem} 
+          onPress={async () => {
+            try {
+              const status = await AsyncStorage.getItem('instructorVerified');
+              console.log('🔍 수동 확인 - AsyncStorage 상태:', status);
+              console.log('🔍 수동 확인 - 현재 상태:', isInstructorVerified);
+              Alert.alert('디버깅', `AsyncStorage: ${status}\n현재 상태: ${isInstructorVerified}`);
+            } catch (error) {
+              console.error('수동 확인 오류:', error);
+            }
+          }}
+        >
+          <View style={styles.menuIcon}>
+            <Text style={styles.menuIconText}>🔍</Text>
+          </View>
+          <Text style={styles.menuText}>
+            강사 인증 상태 확인 (디버깅)
           </Text>
           <Text style={styles.menuArrow}>{'›'}
           </Text>
@@ -232,13 +328,19 @@ export const ProfileScreen: React.FC = () => {
               Alert.alert('로그인 필요', '개설 수업을 관리하려면 먼저 로그인해주세요.');
               return;
             }
-            Alert.alert('개설 수업 관리', '개설 수업 관리 기능은 추후 구현 예정입니다.');
+            if (!isInstructorVerified) {
+              Alert.alert('강사 인증 필요', '개설 수업을 관리하려면 먼저 강사 인증을 완료해주세요.');
+              return;
+            }
+            navigation.navigate(SCREENS.OPEN_LESSONS);
           }}
         >
           <View style={styles.menuIcon}>
             <Text style={styles.menuIconText}>📁</Text> {/* 폴더 이모지로 관리/목록을 나타냄 */}
           </View>
-          <Text style={styles.menuText}>개설 수업</Text>
+          <Text style={styles.menuText}>
+            개설 수업 {isInstructorVerified ? '(인증완료)' : '(인증필요)'}
+          </Text>
           <Text style={styles.menuArrow}>{'›'}</Text>
         </TouchableOpacity>
       </View>

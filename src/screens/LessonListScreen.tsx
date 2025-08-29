@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, StatusBar, Dimensions, ActivityIndicator, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, StatusBar, Dimensions, ActivityIndicator, Alert, SafeAreaView } from 'react-native';
 import { LessonService } from '../services/lessonService';
 import { BackendLesson } from '../types';
 import { SCREENS } from '../constants/screens';
 import { useAuth } from '../hooks/useAuth';
+import { Header } from '../components/Header';
+import { LeftArrowBlue } from '../../assets/icons/LeftArrow_blue';
 
 // 화면 크기
 const { width, height } = Dimensions.get('window');
@@ -166,17 +167,12 @@ export const LessonListScreen = ({ navigation }: any) => {
     updateConsonantPositions(filteredSports);
   }, [searchText]);
 
-  // 1단계: 스포츠 종목 목록 렌더링
-  const renderSportsList = () => {
+  // 1단계: 스포츠 종목 목록 렌더링 (Header 제외)
+  const renderSportsListContent = () => {
     const filteredSports = getFilteredSports();
     
     return (
-      <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>수업리스트</Text>
-        </View>
-
+      <View style={styles.contentContainer}>
         {/* Search Bar */}
         <View style={styles.searchBar}>
           <View style={styles.searchIcon} />
@@ -250,13 +246,9 @@ export const LessonListScreen = ({ navigation }: any) => {
     );
   };
 
-  // 2단계: 수업 목록 렌더링
-  const renderLessonsList = () => (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>수업리스트</Text>
-      </View>
+  // 2단계: 수업 목록 렌더링 (Header 제외)
+  const renderLessonsListContent = () => (
+    <View style={styles.contentContainer}>
 
       {/* Navigation */}
       <View style={styles.navigation}>
@@ -352,10 +344,22 @@ export const LessonListScreen = ({ navigation }: any) => {
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      {currentStep === 'sports' && renderSportsList()}
-      {currentStep === 'lessons' && renderLessonsList()}
-    </SafeAreaView>
+    <View style={styles.container}>
+      {/* Header를 SafeAreaView 밖으로 이동하여 paddingTop: 50이 적용되도록 함 */}
+      <Header 
+        title="수업리스트" 
+        showLogo={true} 
+        customIcon={
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <LeftArrowBlue width={32} height={32} />
+          </TouchableOpacity>
+        } 
+      />
+      
+      {/* 스포츠 목록 또는 수업 목록 렌더링 */}
+      {currentStep === 'sports' && renderSportsListContent()}
+      {currentStep === 'lessons' && renderLessonsListContent()}
+    </View>
   );
 };
 
@@ -369,20 +373,16 @@ const styles = StyleSheet.create({
     position: 'relative',
     width: 393,
     backgroundColor: '#FEFEFE',
+    paddingTop: 50,
+  },
+  contentContainer: {
+    flex: 1,
+    position: 'relative',
+    width: 393,
+    backgroundColor: '#FEFEFE',
   },
   
-  // Header
-  header: {
-    paddingLeft: 23,
-    paddingTop: 5,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#5981FA',
-    lineHeight: 24,
-  },
-  
+
   // Search Bar
   searchBar: {
     flexDirection: 'row',
@@ -390,7 +390,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#AEC7EB',
     borderRadius: 20,
     marginHorizontal: 11,
-    marginTop: 30,
+    marginTop: 10,
     paddingHorizontal: 12,
     paddingVertical: 6,
     height: 40,

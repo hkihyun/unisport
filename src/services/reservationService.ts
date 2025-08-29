@@ -64,6 +64,26 @@ export class ReservationService {
       throw error;
     }
   }
+
+  // 예약 취소 (lessonId로)
+  static async cancelReservation(lessonId: number): Promise<any> {
+    try {
+      console.log('Canceling reservation with lessonId:', lessonId);
+      const response = await apiClient.delete<any>(
+        `${API_ENDPOINTS.RESERVATIONS.BASE}?lessonId=${lessonId}`,
+        false // 인증이 필요하지 않음
+      );
+
+      if (response.success && response.data) {
+        return response.data;
+      } else {
+        throw new Error(response.error || 'Failed to cancel reservation');
+      }
+    } catch (error) {
+      console.error('Error canceling reservation:', error);
+      throw error;
+    }
+  }
 }
 
 export default ReservationService;

@@ -94,6 +94,72 @@ export class LessonService {
     return apiClient.post<CreateLessonResponse>(API_ENDPOINTS.LESSONS.CREATE, lessonData, true);
   }
 
+  // 새로운 레슨 생성 API (POST /lessons)
+  static async createLessonNew(lessonData: {
+    sport: string;
+    title: string;
+    description: string;
+    level: number;
+    location: string;
+    capacity: number;
+    instructorUserId: number;
+    lessonDate: string;
+    lessonTime: string;
+  }): Promise<ApiResponse<any>> {
+    try {
+      console.log('🚀 새로운 레슨 생성 API 호출:', lessonData);
+      
+      const response = await fetch('https://unisportserver.onrender.com/lessons', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          id: null,
+          sport: lessonData.sport,
+          title: lessonData.title,
+          description: lessonData.description,
+          level: lessonData.level,
+          location: lessonData.location,
+          capacity: lessonData.capacity,
+          reserved_count: 0,
+          reservationStatus: 'AVAILABLE',
+          instructorUserId: lessonData.instructorUserId,
+          lessonDate: lessonData.lessonDate,
+          lessonTime: lessonData.lessonTime,
+        }),
+      });
+
+      console.log('📡 레슨 생성 API 응답 상태:', response.status);
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ 레슨 생성 성공:', result);
+        return {
+          success: true,
+          data: result,
+          message: '레슨이 성공적으로 생성되었습니다.',
+        };
+      } else {
+        const errorText = await response.text();
+        console.log('❌ 레슨 생성 실패:', response.status, errorText);
+        return {
+          success: false,
+          error: `레슨 생성에 실패했습니다. (${response.status})`,
+          message: errorText,
+        };
+      }
+    } catch (error) {
+      console.error('🚨 레슨 생성 중 오류:', error);
+      return {
+        success: false,
+        error: '네트워크 오류가 발생했습니다.',
+        message: '레슨 생성 중 오류가 발생했습니다.',
+      };
+    }
+  }
+
   // 백엔드 API에서 직접 배열 반환하는 경우를 위한 함수
   static async getLessonsDirect(): Promise<BackendLesson[]> {
     try {

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, StatusBar, SafeAreaView } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAuth } from '../hooks/useAuth';
 import { SCREENS } from '../constants/screens';
 import { AuthService } from '../services/authService';
+import { Header } from '../components/Header';
+import { LeftArrowBlue } from '../../assets/icons/LeftArrow_blue';
 
 type LoginScreenProps = {
   navigation: StackNavigationProp<any>;
@@ -64,15 +66,15 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
       
       {/* 네비게이션 헤더 */}
-      <View style={styles.header}>
-                                                                               <TouchableOpacity 
-          style={styles.backButton} 
-          onPress={() => navigation.navigate(SCREENS.PROFILE)}
-        >
-          <Text style={styles.backButtonText}>‹</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>로그인</Text>
-      </View>
+      <Header 
+        title="로그인" 
+        showLogo={true} 
+        customIcon={
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <LeftArrowBlue width={32} height={32} />
+          </TouchableOpacity>
+        } 
+      />
 
       {/* 앱 제목 */}
       <Text style={styles.appTitle}>UniSportsCard</Text>
@@ -131,30 +133,8 @@ const styles = StyleSheet.create({
     paddingTop: 50,
   },
   
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    marginBottom: 40,
-  },
-  
-  backButton: {
-    padding: 10,
-  },
-  
-  backButtonText: {
-    fontSize: 24,
-    color: '#999',
-    fontWeight: '600',
-  },
-  
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#5981FA',
-    marginLeft: 5, // 뒤로가기 버튼에서 적당한 여백
-    top: 2,
-  },
+
+
   
   appTitle: {
     top: 35,

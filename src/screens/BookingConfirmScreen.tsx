@@ -1,18 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, ActivityIndicator, Alert } from 'react-native';
 import { COLORS } from '../constants/colors';
 import { LessonService } from '../services/lessonService';
+import { ReservationService } from '../services/reservationService';
 import { BackendLessonDetail } from '../types';
-
+import { Header } from '../components/Header';
+import { LeftArrowBlue } from '../../assets/icons/LeftArrow_blue';
 const { width } = Dimensions.get('window');
 
 export const BookingConfirmScreen: React.FC<any> = ({ navigation, route }) => {
-	const { type, lessonId, reservationId } = route.params;
+	const { type, lessonId, reservationId, fromHome, reservation, lessonDetail: homeLessonDetail } = route.params;
 	const [lessonDetail, setLessonDetail] = useState<BackendLessonDetail | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
+		// 홈화면에서 온 경우 이미 수업 정보가 있음
+		if (fromHome && homeLessonDetail) {
+			setLessonDetail(homeLessonDetail);
+			setIsLoading(false);
+			return;
+		}
+
 		const fetchLessonDetail = async () => {
 			try {
 				setIsLoading(true);
@@ -30,7 +39,7 @@ export const BookingConfirmScreen: React.FC<any> = ({ navigation, route }) => {
 		if (lessonId) {
 			fetchLessonDetail();
 		}
-	}, [lessonId]);
+	}, [lessonId, fromHome, homeLessonDetail]);
 
 	// 로딩 중일 때
 	if (isLoading) {
@@ -77,25 +86,68 @@ export const BookingConfirmScreen: React.FC<any> = ({ navigation, route }) => {
 			return `오후 ${hour - 12}:${minute.toString().padStart(2, '0')}`;
 		}
 	};
+
+	// 예약 취소 함수
+	const handleCancelReservation = async () => {
+		Alert.alert(
+			'예약 취소',
+			'정말로 이 수업 예약을 취소하시겠습니까?',
+			[
+				{
+					text: '취소',
+					style: 'cancel',
+				},
+				{
+					text: '확인',
+					onPress: async () => {
+						try {
+							// 로딩 상태 표시
+							setIsLoading(true);
+							
+							// 예약 취소 API 호출
+							await ReservationService.cancelReservation(parseInt(lessonId));
+							
+							// 성공 메시지 표시
+							Alert.alert(
+								'예약 취소 완료',
+								'수업 예약이 성공적으로 취소되었습니다.',
+								[
+									{
+										text: '확인',
+										onPress: () => {
+											// 홈화면으로 이동
+											navigation.navigate('Home');
+										}
+									}
+								]
+							);
+						} catch (error) {
+							console.error('예약 취소 실패:', error);
+							Alert.alert(
+								'예약 취소 실패',
+								'예약 취소 중 오류가 발생했습니다. 다시 시도해주세요.',
+								[{ text: '확인' }]
+							);
+						} finally {
+							setIsLoading(false);
+						}
+					}
+				}
+			]
+		);
+	};
 	
 	return (
 		<View style={styles.container}>
-			{/* 상단 고정 영역 */}
-			<View style={styles.fixedTopSection}>
-				{/* 뒤로가기 버튼 */}
-				<TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-					<Text style={styles.arrow}>‹</Text>
-				</TouchableOpacity>
-				
-				{/* 제목 */}
-				<Text style={styles.screenTitle}>
-					{type === 'book' ? '예약 완료' : '관심 등록하기'}
-				</Text>
-			</View>
-			
-			{/* 구분선 */}
-			<View style={styles.headerDivider} />
-			
+			<Header
+				title={type === 'book' ? '예약 완료' : '관심 등록하기'}
+				showLogo={true}
+				customIcon={
+					<TouchableOpacity onPress={() => navigation.goBack()}>
+						<LeftArrowBlue width={32} height={32} />
+					</TouchableOpacity>
+				}
+			/>
 			{/* 메인 콘텐츠 */}
 			<ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
 
@@ -142,17 +194,28 @@ export const BookingConfirmScreen: React.FC<any> = ({ navigation, route }) => {
 			
 			{/* 하단 고정 버튼 */}
 			<View style={styles.bottomButtonContainer}>
-				<TouchableOpacity 
-					style={styles.primaryButton}
-					onPress={() => {
-						// 홈 화면으로 이동
-						navigation.navigate('Home');
-					}}
-				>
-					<Text style={styles.primaryButtonText}>
-						{type === 'book' ? '홈으로 이동' : '관심등록확인'}
-					</Text>
-				</TouchableOpacity>
+				{fromHome ? (
+					// 홈화면에서 온 경우: 예약취소 버튼
+					<TouchableOpacity 
+						style={styles.primaryButton}
+						onPress={handleCancelReservation}
+					>
+						<Text style={styles.primaryButtonText}>예약취소</Text>
+					</TouchableOpacity>
+				) : (
+					// 일반적인 경우: 홈으로 이동 버튼
+					<TouchableOpacity 
+						style={styles.primaryButton}
+						onPress={() => {
+							// 홈 화면으로 이동
+							navigation.navigate('Home');
+						}}
+					>
+						<Text style={styles.primaryButtonText}>
+							{type === 'book' ? '홈으로 이동' : '관심등록확인'}
+						</Text>
+					</TouchableOpacity>
+				)}
 			</View>
 		</View>
 	);
@@ -162,6 +225,7 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		backgroundColor: COLORS.BACKGROUND,
+		paddingTop: 50,
 	},
 	
 	// 상단 고정 영역

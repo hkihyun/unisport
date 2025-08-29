@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ApiResponse, PaginatedResponse, PaginationParams } from '../types';
 
 // API 기본 설정
-const API_BASE_URL = 'https://unisportserver-develop.onrender.com';
+const API_BASE_URL = 'https://unisportserver.onrender.com';
 
 // HTTP 메서드 타입
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';

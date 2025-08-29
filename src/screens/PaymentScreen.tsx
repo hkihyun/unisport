@@ -1,33 +1,52 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
-import { COLORS } from '../constants/colors';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, StatusBar } from 'react-native';
+import { Header } from '../components/Header';
+import { LeftArrowBlue } from '../../assets/icons/LeftArrow_blue';
 
-export const PaymentScreen: React.FC = () => {
+export const PaymentScreen: React.FC<any> = ({ navigation }) => {
 	const handlePay = () => {
 		Alert.alert('결제', '결제 플로우는 추후 PG 연동 시 활성화됩니다.');
 	};
 
 	return (
 		<View style={styles.container}>
-			<ScrollView style={styles.scrollContainer} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-				<View style={styles.headerRow}>
-					<Text style={styles.headerTitle}>UniSportsCard 구독</Text>
+			<StatusBar barStyle="dark-content" backgroundColor="white" />
+			<Header title="UnisportCard 구독" showLogo={true} customIcon={<LeftArrowBlue width={32} height={32} />} />
+
+			<ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+				{/* 구독 정보 섹션 */}
+				<View style={styles.firstSection}>
+					<Text style={styles.sectionTitle}>멤버십 구독 후 바로 예약</Text>
+					<Text style={styles.sectionSubtitle}>수업 예약을 시작하려면 멤버십 구독이 필요합니다.</Text>
+		        <View style={styles.secondSection}>
+					<Text style={styles.secondsectionTitle}>멤버십으로 할 수 있는 것</Text>
+					<Text style={styles.secondsectionSubtitle}>
+					• 모든 수업 예약 가능{'\n'}
+					• 예약 오픈 즉시 알림(수업 시작 2일 전 00:00 기준){'\n'}
+					• 출석 체크 & 기록 리포트{'\n'}
+					• 맞춤 추천(관심 종목/시간대 기반){'\n'}
+					• 공지/휴강 알림 및 고객센터 빠른 응답
+					</Text>
 				</View>
 
-				<View style={styles.card}>
-					<View style={styles.cardLeft}>
-						<View style={styles.cardLine} />
-						<View style={[styles.cardLine, { width: '65%' }]} />
+
+
+					<View style={styles.subscriptionCard}>
+						<View style={styles.cardContent}>
+							<View style={styles.cardLines}>
+								<Text style={styles.firstcardLineText}>학기권 ₩60,000</Text>
+								<Text style={styles.secondcardLineText}>학기당 1회 정기 결제</Text>
+								<Text style={styles.thirdcardLineText}>학기 시작일 - 학기 종료일 무제한 예약/알림/기록 이용</Text>
+							</View>
+						</View>
 					</View>
-					<Text style={styles.price}>60,000원</Text>
 				</View>
 
-				<View style={styles.paymentInfoBox}>
-					<Text style={styles.paymentInfoText}>결제정보</Text>
-				</View>
 
+
+				{/* 결제하기 버튼 */}
 				<TouchableOpacity style={styles.payButton} onPress={handlePay}>
-					<Text style={styles.payButtonText}>결제하기</Text>
+					<Text style={styles.payButtonText}>구독하기</Text>
 				</TouchableOpacity>
 			</ScrollView>
 		</View>
@@ -37,73 +56,128 @@ export const PaymentScreen: React.FC = () => {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: COLORS.BACKGROUND,
+		backgroundColor: 'white',
+		paddingTop: 50,
 	},
 	scrollContainer: {
 		flex: 1,
+		paddingHorizontal: 20,
 	},
-	content: {
-		padding: 20,
-		gap: 16,
+	firstSection: {
+		marginTop: 20,
+		marginBottom: 0,
 	},
-	headerRow: {
-		paddingVertical: 4,
+	sectionTitle: {
+		fontSize: 26,
+		fontWeight: '800',
+		marginBottom: 16,
+		lineHeight: 28,
+		fontFamily: 'Inter',
+		marginTop: 50,
+		color: '#2B308B',
+		marginLeft: 10,
 	},
-	headerTitle: {
-		fontSize: 18,
-		fontWeight: '600',
-		color: COLORS.TEXT_PRIMARY,
+	sectionSubtitle: {
+		fontSize: 15,
+		fontWeight: '400',
+		color: '#696E83',
+		marginBottom: -20,
+		lineHeight: 17,
+		fontFamily: 'Inter',
+		marginLeft: 10,
 	},
-	card: {
-		backgroundColor: COLORS.WHITE,
+
+
+	secondSection: {
+		marginTop: 60,
+		marginBottom: 30,
+	},
+	secondsectionTitle: {
+		fontSize: 20,
+		fontWeight: '700',
+		color: '#2B308B',
+		marginBottom: 16,
+		lineHeight: 17,
+		fontFamily: 'Inter',
+		marginLeft: 10,
+		marginTop: 10,
+		paddingTop: 10,
+	},
+	secondsectionSubtitle: {
+		fontSize: 16,
+		fontWeight: '400',
+		color: '#5981FA',
+		marginBottom: 16,
+		lineHeight: 20,
+		fontFamily: 'Inter',
+		marginLeft: 10,
+		marginTop: -2,
+	},
+
+
+
+
+
+
+
+
+
+
+
+	subscriptionCard: {
+		backgroundColor: 'white',
 		borderRadius: 12,
 		padding: 16,
 		borderWidth: 1,
-		borderColor: COLORS.BORDER,
+		borderColor: '#EDF2F8',
+	},
+	cardContent: {
 		flexDirection: 'row',
 		justifyContent: 'space-between',
 		alignItems: 'center',
 	},
-	cardLeft: {
+	cardLines: {
 		flex: 1,
-		gap: 8,
+		gap: 10,
 	},
-	cardLine: {
-		height: 16,
-		width: '50%',
-		backgroundColor: COLORS.BACKGROUND_TERTIARY,
-		borderRadius: 8,
-	},
-	price: {
-		fontSize: 18,
+
+
+	firstcardLineText: {
+		fontSize: 21,
 		fontWeight: '700',
-		color: COLORS.TEXT_PRIMARY,
+		color: '#2B308B',
 	},
-	paymentInfoBox: {
-		height: 260,
-		borderRadius: 12,
-		backgroundColor: COLORS.BACKGROUND_TERTIARY,
-		alignItems: 'center',
-		justifyContent: 'center',
-	},
-	paymentInfoText: {
-		color: COLORS.ACCENT,
+	secondcardLineText: {
 		fontSize: 16,
-		fontWeight: '600',
+		fontWeight: '400',
+		color: '#696E83',
 	},
+	thirdcardLineText: {
+		fontSize: 15,
+		fontWeight: '500',
+		color: '#5981FA',
+	},
+
+
+
+
 	payButton: {
-		backgroundColor: COLORS.GRAY_200,
-		borderRadius: 12,
-		height: 56,
+		backgroundColor: '#5981FA',
+		borderRadius: 30,
+		height: 55,
 		alignItems: 'center',
 		justifyContent: 'center',
+		marginBottom: 10,
+		marginTop: 170,
 	},
 	payButtonText: {
-		color: COLORS.TEXT_PRIMARY,
-		fontSize: 16,
+		color: 'white',
+		fontSize: 18,
 		fontWeight: '600',
 	},
 });
+
+export default PaymentScreen;
 
 
 
