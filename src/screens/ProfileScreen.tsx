@@ -299,29 +299,7 @@ export const ProfileScreen: React.FC = () => {
            </Text>
          </TouchableOpacity>
         
-        {/* 디버깅용: 강사 인증 상태 확인 버튼 (임시) */}
-        <TouchableOpacity 
-          style={styles.menuItem} 
-          onPress={async () => {
-            try {
-              const status = await AsyncStorage.getItem('instructorVerified');
-              console.log('🔍 수동 확인 - AsyncStorage 상태:', status);
-              console.log('🔍 수동 확인 - 현재 상태:', isInstructorVerified);
-              Alert.alert('디버깅', `AsyncStorage: ${status}\n현재 상태: ${isInstructorVerified}`);
-            } catch (error) {
-              console.error('수동 확인 오류:', error);
-            }
-          }}
-        >
-          <View style={styles.menuIcon}>
-            <Text style={styles.menuIconText}>🔍</Text>
-          </View>
-          <Text style={styles.menuText}>
-            강사 인증 상태 확인 (디버깅)
-          </Text>
-          <Text style={styles.menuArrow}>{'›'}
-          </Text>
-        </TouchableOpacity>
+
         
                  {/* 개설 수업 관리 메뉴 */}
          <TouchableOpacity 

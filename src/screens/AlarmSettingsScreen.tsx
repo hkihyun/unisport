@@ -58,6 +58,7 @@ export const AlarmSettingsScreen: React.FC = () => {
       {/* 하단 도움말 */}
       <View style={styles.footer}>
         <TouchableOpacity style={styles.helpButton}>
+          <Text style={styles.helpIcon}>?</Text>
           <Text style={styles.helpText}>도움이 필요 하신가요?</Text>
         </TouchableOpacity>
       </View>

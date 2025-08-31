@@ -34,6 +34,7 @@ import WriteReviewScreen from '../screens/WriteReviewScreen';
 import { CustomerServiceScreen } from '../screens/CustomerServiceScreen';
 import { AttendanceCheckScreen } from '../screens/AttendanceCheckScreen';
 import { AlarmSettingsScreen } from '../screens/AlarmSettingsScreen';
+import AlarmScreen from '../screens/AlarmScreen';
 
 // 임시 화면 컴포넌트 (아직 만들지 않은 화면들용)
 const TempScreen: React.FC<{ title: string }> = ({ title }) => (
@@ -69,6 +70,7 @@ type RootStackParamList = {
     WriteReview: { lessonId: number; lessonDetail: any };
     [SCREENS.ATTENDANCE_CHECK]: undefined;
     [SCREENS.ALARM_SETTINGS]: undefined;
+    [SCREENS.ALARM]: undefined;
   };
 
 // 탭 네비게이터 타입 정의
@@ -317,6 +319,11 @@ const AppNavigator: React.FC = () => {
             <Stack.Screen
               name={SCREENS.ALARM_SETTINGS}
               component={AlarmSettingsScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name={SCREENS.ALARM}
+              component={AlarmScreen}
               options={{ headerShown: false }}
             />
           </Stack.Navigator>

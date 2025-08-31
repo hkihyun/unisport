@@ -79,6 +79,7 @@ export const SCREENS = {
     SPORT_LESSONS: 'SportLessons',
     ATTENDANCE_CHECK: 'AttendanceCheck',
     ALARM_SETTINGS: 'AlarmSettings',
+    ALARM: 'Alarm',
   } as const;
 
 // 화면 이름 타입

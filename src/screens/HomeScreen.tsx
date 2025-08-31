@@ -221,6 +221,15 @@ export const HomeScreen: React.FC<any> = ({ navigation }) => {
 						/>
 						<Text style={styles.appName}>UniSportsCard</Text>
 					</View>
+					<TouchableOpacity 
+						style={styles.alarmButton}
+						onPress={() => navigation.navigate(SCREENS.ALARM)}
+					>
+						<Image 
+							source={require('../../assets/icons/Alarm.png')} 
+							style={styles.alarmIcon}
+						/>
+					</TouchableOpacity>
 				</View>
 				
 				<ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
@@ -258,8 +267,8 @@ export const HomeScreen: React.FC<any> = ({ navigation }) => {
 								<View style={styles.checkmarkIcon} />
 							</View>
 							<Text style={styles.classTime}>
-								{todayFirstLessonDetail && todayFirstLessonDetail.lessonDate
-									? `${formatDate(todayFirstLessonDetail.lessonDate)} ${todayFirstLessonDetail.lessonTime || ''}`
+								{todayFirstLessonDetail && todayFirstLessonDetail.schedules && todayFirstLessonDetail.schedules.length > 0
+									? `${formatDate(todayFirstLessonDetail.schedules[0].date)} ${formatTime(todayFirstLessonDetail.schedules[0].startTime)}`
 									: formatTime(todayFirstLesson.createdAt)
 								}
 							</Text>
@@ -427,7 +436,7 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 		alignItems: 'center',
 	},
-	logoIcon: {
+		logoIcon: {
 		width: 24,
 		height: 24,
 		marginRight: 8,
@@ -437,6 +446,17 @@ const styles = StyleSheet.create({
 		fontSize: 21,
 		fontWeight: '600',
 		color: COLORS.PRIMARY,
+	},
+	alarmButton: {
+		width: 40,
+		height: 40,
+		justifyContent: 'center',
+		alignItems: 'center',
+	},
+	alarmIcon: {
+		width: 24,
+		height: 24,
+		resizeMode: 'contain',
 	},
 	pageIndicator: {
 		fontSize: 16,
