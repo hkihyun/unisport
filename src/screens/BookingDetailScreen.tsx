@@ -124,7 +124,7 @@ export const BookingDetailScreen: React.FC<any> = ({ navigation, route }) => {
 			
 			const reservationRequest = {
 				userId: parseInt(user.id),
-				lessonId: lessonDetail.id
+				lessonScheduleId: lessonDetail.id
 			};
 
 			const response = await ReservationService.createReservation(reservationRequest);

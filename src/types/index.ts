@@ -239,15 +239,16 @@ export interface BackendReservation {
 // 백엔드 API 예약 생성 요청 타입 (POST /reservations)
 export interface CreateReservationRequest {
   userId: number;
-  lessonId: number;
+  lessonScheduleId: number;
 }
 
 // 백엔드 API 예약 생성 응답 타입 (POST /reservations)
 export interface CreateReservationResponse {
   id: number;
   userId: number;
-  lessonId: number;
+  lessonScheduleId: number;
   createdAt: string;
+  attendancdId: string;
 }
 
 // 백엔드 API 예약 목록 응답 타입 (GET /reservations/{userId} 응답)
