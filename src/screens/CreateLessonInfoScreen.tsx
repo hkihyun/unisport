@@ -344,7 +344,7 @@ export const CreateLessonInfoScreen: React.FC<any> = ({ navigation }) => {
               style={styles.inputField}
               value={time}
               onChangeText={setTime}
-              placeholder="예:) 14:00 - 15:00"
+              placeholder="14:00"
               placeholderTextColor="#999"
             />
           </View>
