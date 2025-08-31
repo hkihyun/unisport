@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
 		flex: 1,
 		justifyContent: 'center',
 		alignItems: 'center',
-		paddingVertical: 60,
+		paddingVertical: 110
 	},
 	noLessonsTitle: {
 		fontSize: 18,
@@ -198,11 +198,13 @@ const styles = StyleSheet.create({
 		color: COLORS.TEXT_PRIMARY,
 		marginBottom: 8,
 		textAlign: 'center',
+		top: -70
 	},
 	noLessonsSubtitle: {
 		fontSize: 14,
 		color: COLORS.TEXT_SECONDARY,
 		textAlign: 'center',
+		top: -60
 	},
 	/* 타임라인 레이아웃 */
 	timelineRow: { 
