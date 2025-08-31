@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, StatusBar, Dimensions, ActivityIndicator, Alert, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, StatusBar, Dimensions, ActivityIndicator, Alert, SafeAreaView, Image } from 'react-native';
 import { LessonService } from '../services/lessonService';
 import { BackendLessonDetail } from '../types';
 import { SCREENS } from '../constants/screens';
@@ -45,6 +45,9 @@ export const LessonListScreen = ({ navigation }: any) => {
   // 관심과목 상태 관리
   const [favoriteLessons, setFavoriteLessons] = useState<Set<string>>(new Set());
   
+  // 수업 이미지들을 관리하는 state
+  const [lessonImages, setLessonImages] = useState<Record<string, string>>({});
+  
   // 스크롤 뷰 참조
   const scrollViewRef = useRef<ScrollView>(null);
   // 초성별 위치 정보를 저장할 상태
@@ -65,6 +68,34 @@ export const LessonListScreen = ({ navigation }: any) => {
     return `${month}월 ${day}일 (${weekday})`;
   };
 
+  // 수업 이미지들을 가져오는 함수
+  const fetchLessonImages = async (lessonsData: BackendLessonDetail[]) => {
+    try {
+      const imagePromises = lessonsData.map(async (lesson) => {
+        try {
+          const imageUrl = await LessonService.getLessonImage(lesson.id.toString());
+          return { id: lesson.id, imageUrl };
+        } catch (error) {
+          console.error(`수업 ${lesson.id} 이미지 가져오기 실패:`, error);
+          return { id: lesson.id, imageUrl: null };
+        }
+      });
+
+      const imageResults = await Promise.all(imagePromises);
+      const newLessonImages: Record<string, string> = {};
+      
+      imageResults.forEach((result) => {
+        if (result.imageUrl) {
+          newLessonImages[result.id] = result.imageUrl;
+        }
+      });
+
+      setLessonImages(newLessonImages);
+    } catch (error) {
+      console.error('수업 이미지들 가져오기 실패:', error);
+    }
+  };
+
   // 스포츠 종목 선택 시 해당 종목의 수업을 가져오기
   const handleSportSelect = async (sport: string) => {
     try {
@@ -75,6 +106,10 @@ export const LessonListScreen = ({ navigation }: any) => {
       // API에서 해당 스포츠의 수업을 가져오기
       const lessonsData = await LessonService.getLessonsBySportName(sport);
       setLessons(lessonsData);
+      
+      // 수업 이미지들 가져오기
+      fetchLessonImages(lessonsData);
+      
       setCurrentStep('lessons');
     } catch (error) {
       console.error('스포츠별 수업 조회 실패:', error);
@@ -463,8 +498,12 @@ export const LessonListScreen = ({ navigation }: any) => {
                     </View>
                     
                     <View style={styles.lessonImageContainer}>
-                      {lesson.imagePath ? (
-                        <View style={styles.lessonImage} />
+                      {lessonImages[lesson.id] ? (
+                        <Image 
+                          source={{ uri: lessonImages[lesson.id] }} 
+                          style={styles.lessonImage}
+                          resizeMode="cover"
+                        />
                       ) : (
                         <View style={styles.noImageContainer}>
                           <Text style={styles.noImageText}>이미지 없음</Text>
@@ -777,7 +816,6 @@ const styles = StyleSheet.create({
   lessonImage: {
     width: 94,
     height: 94,
-    backgroundColor: '#AEC7EB',
     borderRadius: 10,
   },
   noImageContainer: {

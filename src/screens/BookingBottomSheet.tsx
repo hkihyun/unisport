@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, Dimensions, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, Dimensions, Alert, Image } from 'react-native';
 import { COLORS } from '../constants/colors';
 import { HeartIcon } from '../../assets/icons/HeartIcon';
 import { lessonLikeService } from '../services/lessonLikeService';
+import { LessonService } from '../services/lessonService';
 
 const { height: screenHeight } = Dimensions.get('window');
 
@@ -11,6 +12,7 @@ type Lesson = {
 	time: string;
 	title: string;
 	place: string;
+	imageUrl?: string; // 이미지 URL 추가
 };
 
 type Props = {
@@ -34,6 +36,37 @@ export const BookingBottomSheet: React.FC<Props> = ({
 	
 	// 각 수업별로 좋아요 상태를 관리하는 state
 	const [favoriteLessons, setFavoriteLessons] = useState<Set<string>>(new Set());
+	
+	// 수업 이미지들을 관리하는 state
+	const [lessonImages, setLessonImages] = useState<Record<string, string>>({});
+
+	// 수업 이미지 가져오기 함수
+	const fetchLessonImages = async () => {
+		try {
+			const imagePromises = lessons.map(async (lesson) => {
+				try {
+					const imageUrl = await LessonService.getLessonImage(lesson.id);
+					return { id: lesson.id, imageUrl };
+				} catch (error) {
+					console.error(`수업 ${lesson.id} 이미지 가져오기 실패:`, error);
+					return { id: lesson.id, imageUrl: null };
+				}
+			});
+
+			const imageResults = await Promise.all(imagePromises);
+			const newLessonImages: Record<string, string> = {};
+			
+			imageResults.forEach((result) => {
+				if (result.imageUrl) {
+					newLessonImages[result.id] = result.imageUrl;
+				}
+			});
+
+			setLessonImages(newLessonImages);
+		} catch (error) {
+			console.error('수업 이미지들 가져오기 실패:', error);
+		}
+	};
 
 	// 좋아요 토글 함수
 	const toggleFavorite = async (lessonId: string) => {
@@ -71,6 +104,9 @@ export const BookingBottomSheet: React.FC<Props> = ({
 				duration: 300,
 				useNativeDriver: true,
 			}).start();
+			
+			// 수업 이미지들 가져오기
+			fetchLessonImages();
 		} else {
 			// 바텀시트가 사라질 때: 달력 아래로 슬라이드 (일부만 보이도록)
 			Animated.timing(slideAnim, {
@@ -132,7 +168,15 @@ export const BookingBottomSheet: React.FC<Props> = ({
 										<Text style={styles.cardPlace}>{l.place}</Text>
 									</View>
 									<View style={styles.cardRight}>
-										<View style={styles.cardThumb} />
+										{lessonImages[l.id] ? (
+											<Image 
+												source={{ uri: lessonImages[l.id] }} 
+												style={styles.cardThumb}
+												resizeMode="cover"
+											/>
+										) : (
+											<View style={styles.cardThumb} />
+										)}
 										<Text style={styles.availableText}>예약가능</Text>
 										<TouchableOpacity 
 											style={styles.HeartIconcontainer}

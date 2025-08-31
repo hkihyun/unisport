@@ -1,4 +1,7 @@
 import { apiClient, API_ENDPOINTS } from './api';
+
+// API 기본 URL (api.ts에서 가져온 값)
+const API_BASE_URL = 'https://unisportserver.onrender.com';
 import { Lesson, ApiResponse, PaginatedResponse, PaginationParams, LessonFilters, CreateLessonRequest as BackendCreateLessonRequest, CreateLessonResponse, BackendLesson, BackendLessonDetail, BackendReview, BackendReviewResponse } from '../types';
 
 // 수업 생성 요청 데이터
@@ -85,6 +88,46 @@ export class LessonService {
         error: '레슨 삭제 중 오류가 발생했습니다.',
         message: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.',
       };
+    }
+  }
+
+  // 수업 이미지 URL 가져오기 (GET /lessons/{lessonId}/image-url)
+  static async getLessonImage(lessonId: string): Promise<string | null> {
+    try {
+      console.log('수업 이미지 URL 가져오기 시작:', lessonId);
+      const url = `${API_BASE_URL}/lessons/${lessonId}/image-url`;
+      console.log('요청 URL:', url);
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        mode: 'cors',
+      });
+      
+      console.log('이미지 URL 응답 상태:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => '');
+        console.error('이미지 URL 가져오기 HTTP 오류:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      }
+      
+      const data = await response.json();
+      console.log('이미지 URL 응답 데이터:', data);
+      
+      if (data && data.url) {
+        console.log('이미지 URL 성공적으로 가져옴:', data.url);
+        return data.url;
+      } else {
+        console.warn('이미지 URL이 응답에 없음:', data);
+        return null;
+      }
+    } catch (error) {
+      console.error('수업 이미지 URL 가져오기 오류:', error);
+      return null;
     }
   }
 

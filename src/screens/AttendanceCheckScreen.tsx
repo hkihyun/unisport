@@ -57,14 +57,6 @@ export const AttendanceCheckScreen: React.FC = () => {
       location: '고려대학교 화정체육관',
       status: '출석'
     },
-    {
-      id: 6,
-      title: '기초 요가',
-      date: '9.6(토)',
-      time: '오후14:30',
-      location: '고려대학교 화정체육관',
-      status: '출석'
-    }
   ];
 
   return (

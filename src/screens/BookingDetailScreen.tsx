@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator, Alert, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator, Alert, SafeAreaView, Image } from 'react-native';
 import { SCREENS } from '../constants/screens';
 import { StarIcon } from 'react-native-heroicons/solid';
 import { LessonService } from '../services/lessonService';
@@ -27,6 +27,7 @@ export const BookingDetailScreen: React.FC<any> = ({ navigation, route }) => {
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [isReserving, setIsReserving] = useState(false);
+	const [lessonImage, setLessonImage] = useState<string | null>(null);
 
 	useEffect(() => {
 		const fetchData = async () => {
@@ -61,6 +62,15 @@ export const BookingDetailScreen: React.FC<any> = ({ navigation, route }) => {
 						console.error('강사 정보 조회 실패:', instructorError);
 						// 강사 정보 조회 실패는 전체 화면 에러로 처리하지 않음
 					}
+				}
+
+				// 수업 이미지 가져오기
+				try {
+					const imageUrl = await LessonService.getLessonImage(lessonId);
+					setLessonImage(imageUrl);
+				} catch (imageError) {
+					console.error('수업 이미지 조회 실패:', imageError);
+					// 이미지 조회 실패는 전체 화면 에러로 처리하지 않음
 				}
 			} catch (err) {
 				console.error('데이터 조회 실패:', err);
@@ -270,8 +280,12 @@ export const BookingDetailScreen: React.FC<any> = ({ navigation, route }) => {
 				{/* 수업 이미지 */}
 				<View style={styles.imageSection}>
 					<View style={styles.imageContainer}>
-						{lessonDetail.image ? (
-							<Text style={styles.imageText}>수업 이미지</Text>
+						{lessonImage ? (
+							<Image 
+								source={{ uri: lessonImage }} 
+								style={styles.lessonImage}
+								resizeMode="cover"
+							/>
 						) : (
 							<Text style={styles.noImageText}>이미지 없음</Text>
 						)}
@@ -551,6 +565,11 @@ const styles = StyleSheet.create({
 		lineHeight: 17,
 		textAlign: 'center',
 		paddingVertical: 50,
+	},
+	lessonImage: {
+		width: '100%',
+		height: '100%',
+		borderRadius: 8,
 	},
 	
 	// 섹션 공통
