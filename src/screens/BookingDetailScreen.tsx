@@ -34,13 +34,20 @@ export const BookingDetailScreen: React.FC<any> = ({ navigation, route }) => {
 				setError(null);
 				
 				// 수업 상세 정보, 강사 정보, 리뷰를 병렬로 가져오기
+
+				const normalizeReviews = (reviewsData: any) => {
+					if (Array.isArray(reviewsData)) return reviewsData;
+					if (Array.isArray(reviewsData?.content)) return reviewsData.content;
+					return [];
+				};
+
 				const [lessonData, reviewsData] = await Promise.all([
 					LessonService.getLessonDetail(lessonId),
-					LessonService.getReviewsByRating(lessonId) // 기본값은 추천순
+					LessonService.getReviewsByRating(lessonId),
 				]);
-				
+
 				setLessonDetail(lessonData);
-				setReviews(reviewsData.content);
+				setReviews(normalizeReviews(reviewsData));
 
 				// 강사 정보 가져오기
 				if (lessonData && lessonData.instructorUserId) {
@@ -74,11 +81,11 @@ export const BookingDetailScreen: React.FC<any> = ({ navigation, route }) => {
 			const reviewsData = sortType === 'recommended' 
 				? await LessonService.getReviewsByRating(lessonId)
 				: await LessonService.getReviewsByLatest(lessonId);
-			setReviews(reviewsData.content);
+			setReviews(reviewsData);
 		} catch (err) {
 			console.error('리뷰 정렬 변경 실패:', err);
 		}
-	};
+	};	
 
 	// 예약 처리
 	const handleReservation = async () => {

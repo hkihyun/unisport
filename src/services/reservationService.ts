@@ -20,48 +20,14 @@ export class ReservationService {
         console.warn('예약 조회 실패:', response.error);
         // 에러 발생 시 빈 응답 구조 반환
         return {
-          content: [],
-          pageable: {
-            pageNumber: 0,
-            pageSize: 10,
-            sort: { empty: true, sorted: false, unsorted: true },
-            offset: 0,
-            paged: false,
-            unpaged: true
-          },
-          totalElements: 0,
-          totalPages: 0,
-          last: true,
-          size: 10,
-          number: 0,
-          sort: { empty: true, sorted: false, unsorted: true },
-          numberOfElements: 0,
-          first: true,
-          empty: true
+          content: []
         };
       }
     } catch (error) {
       console.error('Error fetching user reservations:', error);
       // 에러 발생 시 빈 응답 구조 반환
       return {
-        content: [],
-        pageable: {
-          pageNumber: 0,
-          pageSize: 10,
-          sort: { empty: true, sorted: false, unsorted: true },
-          offset: 0,
-          paged: false,
-          unpaged: true
-        },
-        totalElements: 0,
-        totalPages: 0,
-        last: true,
-        size: 10,
-        number: 0,
-        sort: { empty: true, sorted: false, unsorted: true },
-        numberOfElements: 0,
-        first: true,
-        empty: true
+        content: []
       };
     }
   }
@@ -80,48 +46,14 @@ export class ReservationService {
         console.warn('날짜별 예약 조회 실패:', response.error);
         // 에러 발생 시 빈 응답 구조 반환
         return {
-          content: [],
-          pageable: {
-            pageNumber: 0,
-            pageSize: 10,
-            sort: { empty: true, sorted: false, unsorted: true },
-            offset: 0,
-            paged: false,
-            unpaged: true
-          },
-          totalElements: 0,
-          totalPages: 0,
-          last: true,
-          size: 10,
-          number: 0,
-          sort: { empty: true, sorted: false, unsorted: true },
-          numberOfElements: 0,
-          first: true,
-          empty: true
+          content: []
         };
       }
     } catch (error) {
       console.error('Error fetching reservations by date:', error);
       // 에러 발생 시 빈 응답 구조 반환
       return {
-        content: [],
-        pageable: {
-          pageNumber: 0,
-          pageSize: 10,
-          sort: { empty: true, sorted: false, unsorted: true },
-          offset: 0,
-          paged: false,
-          unpaged: true
-        },
-        totalElements: 0,
-        totalPages: 0,
-        last: true,
-        size: 10,
-        number: 0,
-        sort: { empty: true, sorted: false, unsorted: true },
-        numberOfElements: 0,
-        first: true,
-        empty: true
+        content: []
       };
     }
   }

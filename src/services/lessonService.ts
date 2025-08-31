@@ -44,7 +44,7 @@ export class LessonService {
 
   // 특정 수업 조회
   static async getLessonById(lessonId: string): Promise<ApiResponse<Lesson>> {
-    return apiClient.get<Lesson>(`${API_ENDPOINTS.LESSONS.BASE}/${lessonId}`);
+    return apiClient.get<Lesson>(`${API_ENDPOINTS.LESSONS.BASE}/by-lessonId/${lessonId}`);
   }
 
   // 수업 생성
@@ -269,106 +269,80 @@ export class LessonService {
     }
   }
 
-  // 수업 상세 정보 조회 (GET /lessons/{id})
-  static async getLessonDetail(lessonId: number): Promise<BackendLessonDetail> {
-    try {
-      console.log('수업 상세 정보 조회 시작:', lessonId);
-      const url = `https://unisportserver.onrender.com/lessons/${lessonId}`;
-      console.log('요청 URL:', url);
-      
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        mode: 'cors',
-      });
-      
-      console.log('수업 상세 응답 상태:', response.status);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('수업 상세 HTTP 오류:', errorText);
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-      }
-      
-      const data = await response.json();
-      console.log('수업 상세 응답 데이터:', data);
-      
-      return data;
-    } catch (error) {
-      console.error('수업 상세 정보 조회 오류:', error);
-      throw error;
-    }
+// 수업 상세 정보 조회 (GET /lessons/by-lessonId/{id})
+static async getLessonDetail(lessonId: number): Promise<BackendLessonDetail> {
+  console.log('수업 상세 정보 조회 시작:', lessonId);
+  const url = `https://unisportserver.onrender.com/lessons/by-lessonId/${lessonId}`;
+
+  const res = await fetch(url, {
+    method: 'GET',
+    headers: { 'Accept': 'application/json' },
+    mode: 'cors',
+  });
+
+  console.log('수업 상세 응답 상태:', res.status);
+
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    throw new Error(`HTTP ${res.status} ${errText}`);
   }
 
-  // 리뷰 조회 (추천순 정렬) - GET /review/rating/{lessonId}
-  static async getReviewsByRating(lessonId: number): Promise<BackendReviewResponse> {
-    try {
-      console.log('추천순 리뷰 조회 시작:', lessonId);
-      const url = `https://unisportserver.onrender.com/review/rating/${lessonId}`;
-      console.log('요청 URL:', url);
-      
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        mode: 'cors',
-      });
-      
-      console.log('추천순 리뷰 응답 상태:', response.status);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('추천순 리뷰 HTTP 오류:', errorText);
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-      }
-      
-      const data = await response.json();
-      console.log('추천순 리뷰 응답 데이터:', data);
-      
-      return data;
-    } catch (error) {
-      console.error('추천순 리뷰 조회 오류:', error);
-      throw error;
-    }
+  // API가 항상 JSON 본문을 주므로 바로 json()
+  const data = (await res.json()) as BackendLessonDetail;
+  console.log('수업 상세 응답 데이터:', data);
+  return data;
+}
+
+// 리뷰 조회 (추천순 정렬) - GET /review/rating/{lessonId}
+// ※ 서버 응답은 배열이므로 그대로 배열 반환
+static async getReviewsByRating(lessonId: number): Promise<BackendReview[]> {
+  console.log('추천순 리뷰 조회 시작:', lessonId);
+  const url = `https://unisportserver.onrender.com/review/rating/${lessonId}`;
+
+  const res = await fetch(url, {
+    method: 'GET',
+    headers: { 'Accept': 'application/json' },
+    mode: 'cors',
+  });
+
+  console.log('추천순 리뷰 응답 상태:', res.status);
+
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    throw new Error(`HTTP ${res.status} ${errText}`);
   }
+
+  const data = (await res.json()) as BackendReview[];
+  console.log('추천순 리뷰 응답 데이터:', data);
+  // 방어적으로 배열 보장
+  return Array.isArray(data) ? data : [];
+}
+
 
   // 리뷰 조회 (최신순 정렬) - GET /review/latest/{lessonId}
-  static async getReviewsByLatest(lessonId: number): Promise<BackendReviewResponse> {
-    try {
+  static async getReviewsByLatest(lessonId: number): Promise<BackendReview[]> {
       console.log('최신순 리뷰 조회 시작:', lessonId);
       const url = `https://unisportserver.onrender.com/review/latest/${lessonId}`;
-      console.log('요청 URL:', url);
       
-      const response = await fetch(url, {
+      const res = await fetch(url, {
         method: 'GET',
         headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
         mode: 'cors',
       });
       
-      console.log('최신순 리뷰 응답 상태:', response.status);
+    console.log('최신순 리뷰 응답 상태:', res.status);
       
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('최신순 리뷰 HTTP 오류:', errorText);
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-      }
-      
-      const data = await response.json();
-      console.log('최신순 리뷰 응답 데이터:', data);
-      
-      return data;
-    } catch (error) {
-      console.error('최신순 리뷰 조회 오류:', error);
-      throw error;
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      throw new Error(`HTTP ${res.status} ${errText}`);
     }
+    
+    const data = (await res.json()) as BackendReview[];
+    console.log('최신순 리뷰 응답 데이터:', data);
+    // 방어적으로 배열 보장
+    return Array.isArray(data) ? data : [];
   }
 
   // 스포츠별 수업 검색 - GET /lessons/by-sport/{sport}

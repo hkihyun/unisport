@@ -160,62 +160,72 @@ export interface BackendLesson {
   lessonTime: string;
 }
 
-// 백엔드 API 수업 상세 타입 (GET /lessons/{id} 응답)
-export interface BackendLessonDetail {
-  id: number | null;
+
+// 예시 타입
+type BackendLessonDetail = {
+  id: number;
   sport: string;
   title: string;
   description: string;
+  instructorUserId: number;
   level: number;
   location: string;
-  imagePath: string | null; // API 응답과 일치하도록 image -> imagePath로 변경
-  capacity: number; // API 응답에 있는 필드 추가
-  reservedCount: number; // API 응답에 있는 필드 추가
-  reservationStatus: 'AVAILABLE' | 'FULL' | 'CLOSED'; // API 응답에 있는 필드 추가
-  isEveryWeek: number; // API 응답에 있는 필드 추가
-  dayOfTheWeek: string; // API 응답에 있는 필드 추가
-  instructorUserId: number;
-  lessonDate: string;
-  lessonTime: string;
-}
+  capacity: number;
+  imagePath: string;
+  schedules: Array<{
+    id: number;
+    lessonId: number;
+    date: string;       // "2025-09-01"
+    dayOfWeek: string;  // "MONDAY"
+    startTime: string;  // "10:00:00"
+    endTime: string;    // "11:30:00"
+    capacity: number;
+    reservedCount: number;
+    location: string;
+  }>;
+};
 
-// 백엔드 API 리뷰 타입 (GET /review/rating/{lessonId}, GET /review/latest/{lessonId} 응답)
-export interface BackendReview {
+type BackendReview = {
   id: number;
   lessonId: number;
   rating: number;
   reviewContent: string;
   createdAt: string;
   userId: number;
-}
+};
+
+
+// 백엔드 API 수업 상세 타입 (GET /lessons/{id} 응답)
+// export interface BackendLessonDetail {
+//   id: number | null;
+//   sport: string;
+//   title: string;
+//   description: string;
+//   level: number;
+//   location: string;
+//   imagePath: string | null; // API 응답과 일치하도록 image -> imagePath로 변경
+//   capacity: number; // API 응답에 있는 필드 추가
+//   reservedCount: number; // API 응답에 있는 필드 추가
+//   reservationStatus: 'AVAILABLE' | 'FULL' | 'CLOSED'; // API 응답에 있는 필드 추가
+//   isEveryWeek: number; // API 응답에 있는 필드 추가
+//   dayOfTheWeek: string; // API 응답에 있는 필드 추가
+//   instructorUserId: number;
+//   lessonDate: string;
+//   lessonTime: string;
+// }
+
+// 백엔드 API 리뷰 타입 (GET /review/rating/{lessonId}, GET /review/latest/{lessonId} 응답)
+// export interface BackendReview {
+//   id: number;
+//   lessonId: number;
+//   rating: number;
+//   reviewContent: string;
+//   createdAt: string;
+//   userId: number;
+// }
 
 export interface BackendReviewResponse {
   content: BackendReview[];
-  pageable: {
-    pageNumber: number;
-    pageSize: number;
-    sort: {
-      empty: boolean;
-      unsorted: boolean;
-      sorted: boolean;
-    };
-    offset: number;
-    unpaged: boolean;
-    paged: boolean;
-  };
-  totalElements: number;
-  totalPages: number;
-  last: boolean;
-  size: number;
-  number: number;
-  sort: {
-    empty: boolean;
-    unsorted: boolean;
-    sorted: boolean;
-  };
-  numberOfElements: number;
-  first: boolean;
-  empty: boolean;
 }
 
 // 백엔드 API 예약 타입 (GET /reservations/{userId} 응답)
@@ -243,29 +253,4 @@ export interface CreateReservationResponse {
 // 백엔드 API 예약 목록 응답 타입 (GET /reservations/{userId} 응답)
 export interface BackendReservationResponse {
   content: BackendReservation[];
-  pageable: {
-    pageNumber: number;
-    pageSize: number;
-    sort: {
-      empty: boolean;
-      sorted: boolean;
-      unsorted: boolean;
-    };
-    offset: number;
-    paged: boolean;
-    unpaged: boolean;
-  };
-  totalElements: number;
-  totalPages: number;
-  last: boolean;
-  size: number;
-  number: number;
-  sort: {
-    empty: boolean;
-    sorted: boolean;
-    unsorted: boolean;
-  };
-  numberOfElements: number;
-  first: boolean;
-  empty: boolean;
 }
