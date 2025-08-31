@@ -215,7 +215,10 @@ export const HomeScreen: React.FC<any> = ({ navigation }) => {
 				{/* 헤더 */}
 				<View style={styles.header}>
 					<View style={styles.logoContainer}>
-						<View style={styles.logo} />
+						<Image 
+							source={require('../../assets/icons/ULogo_small.png')} 
+							style={styles.logoIcon}
+						/>
 						<Text style={styles.appName}>UniSportsCard</Text>
 					</View>
 				</View>
@@ -424,12 +427,11 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 		alignItems: 'center',
 	},
-	logo: {
-		width: 32,
-		height: 32,
-		borderRadius: 16,
-		backgroundColor: COLORS.GRAY_300,
-		marginRight: 12,
+	logoIcon: {
+		width: 24,
+		height: 24,
+		marginRight: 8,
+		resizeMode: 'contain',
 	},
 	appName: {
 		fontSize: 21,
