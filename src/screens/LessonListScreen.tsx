@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, StatusBar, Dimensions, ActivityIndicator, Alert, SafeAreaView } from 'react-native';
 import { LessonService } from '../services/lessonService';
-import { BackendLesson } from '../types';
+import { BackendLessonDetail } from '../types';
 import { SCREENS } from '../constants/screens';
 import { useAuth } from '../hooks/useAuth';
 import { Header } from '../components/Header';
@@ -38,7 +38,7 @@ export const LessonListScreen = ({ navigation }: any) => {
   const [selectedSport, setSelectedSport] = useState<string>('');
   const [searchText, setSearchText] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const [lessons, setLessons] = useState<BackendLesson[]>([]);
+  const [lessons, setLessons] = useState<BackendLessonDetail[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -51,7 +51,11 @@ export const LessonListScreen = ({ navigation }: any) => {
   const [consonantPositions, setConsonantPositions] = useState<Record<string, number>>({});
 
   // 날짜를 "몇월 몇일 무슨 요일" 형식으로 변환하는 함수
-  const formatDate = (dateString: string): string => {
+  const formatDate = (dateString: string | undefined): string => {
+    if (!dateString) {
+      return '날짜 정보 없음';
+    }
+    
     const date = new Date(dateString);
     const month = date.getMonth() + 1;
     const day = date.getDate();
@@ -91,7 +95,7 @@ export const LessonListScreen = ({ navigation }: any) => {
   };
 
   // 수업 상세 화면으로 이동
-  const handleLessonSelect = (lesson: BackendLesson) => {
+  const handleLessonSelect = (lesson: BackendLessonDetail) => {
     // 로그인하지 않은 경우 로그인 안내
     if (!isAuthenticated) {
       Alert.alert(
@@ -166,17 +170,22 @@ export const LessonListScreen = ({ navigation }: any) => {
 
   // 수업을 날짜순으로 정렬 (가장 빠른 날짜부터)
   const sortedLessons = [...lessons].sort((a, b) => {
+    // schedules 배열이 있고 첫 번째 스케줄이 있는지 확인
+    if (!a.schedules || a.schedules.length === 0 || !b.schedules || b.schedules.length === 0) {
+      return 0; // 스케줄이 없으면 순서 변경하지 않음
+    }
+    
     // 먼저 날짜로 정렬
-    const dateA = new Date(a.lessonDate);
-    const dateB = new Date(b.lessonDate);
+    const dateA = new Date(a.schedules[0].date);
+    const dateB = new Date(b.schedules[0].date);
     
     if (dateA.getTime() !== dateB.getTime()) {
       return dateA.getTime() - dateB.getTime();
     }
     
     // 날짜가 같으면 시간으로 정렬
-    const timeA = new Date(`2025-01-01 ${a.lessonTime}`);
-    const timeB = new Date(`2025-01-01 ${b.lessonTime}`);
+    const timeA = new Date(`2025-01-01 ${a.schedules[0].startTime}`);
+    const timeB = new Date(`2025-01-01 ${b.schedules[0].startTime}`);
     return timeA.getTime() - timeB.getTime();
   }); 
 
@@ -437,15 +446,31 @@ export const LessonListScreen = ({ navigation }: any) => {
                   >
                     <View style={styles.lessonInfo}>
                       <Text style={styles.lessonTime}>
-                        {lesson.lessonTime.substring(0, 5)} {formatDate(lesson.lessonDate)}
+                        {lesson.schedules && lesson.schedules.length > 0 
+                          ? `${lesson.schedules[0].startTime.substring(0, 5)} ${formatDate(lesson.schedules[0].date)}`
+                          : '시간 정보 없음'
+                        }
                       </Text>
                       <Text style={styles.lessonTitle}>{lesson.title}</Text>
                       <Text style={styles.lessonLocation}>{lesson.location}</Text>
-                      <Text style={styles.reservationText}>예약가능</Text>
+                      <Text style={styles.lessonLevel}>
+                        {lesson.level === 1 ? '초보자' : 
+                         lesson.level === 2 ? '초급' : 
+                         lesson.level === 3 ? '중급' : 
+                         lesson.level === 4 ? '고급' : '전문가'}
+                      </Text>
+                      <Text style={styles.reservationText}>
+                        {lesson.schedules && lesson.schedules.length > 0 
+                          ? lesson.schedules[0].reservedCount < lesson.schedules[0].capacity 
+                            ? '예약가능' 
+                            : '예약마감'
+                          : '예약가능'
+                        }
+                      </Text>
                     </View>
                     
                     <View style={styles.lessonImageContainer}>
-                      {lesson.image ? (
+                      {lesson.imagePath ? (
                         <View style={styles.lessonImage} />
                       ) : (
                         <View style={styles.noImageContainer}>
@@ -725,6 +750,13 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     color: '#696E83',
     lineHeight: 16,
+    marginBottom: 8,
+  },
+  lessonLevel: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#5981FA',
+    lineHeight: 14,
     marginBottom: 8,
   },
   lessonDescription: {

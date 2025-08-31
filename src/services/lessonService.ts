@@ -345,43 +345,26 @@ static async getReviewsByRating(lessonId: number): Promise<BackendReview[]> {
     return Array.isArray(data) ? data : [];
   }
 
-  // 스포츠별 수업 검색 - GET /lessons/by-sport/{sport}
-  static async getLessonsBySportName(sport: string): Promise<BackendLesson[]> {
+  // 스포츠별 수업 검색 - GET /lessons/by-sport?sport={sport}
+  static async getLessonsBySportName(sport: string): Promise<BackendLessonDetail[]> {
     try {
       console.log('스포츠별 수업 검색 시작:', sport);
       const encodedSport = encodeURIComponent(sport);
-      const url = `https://unisportserver.onrender.com/lessons/by-sport/${encodedSport}`;
+      const url = `${API_ENDPOINTS.LESSONS.BY_SPORT}?sport=${encodedSport}`;
       console.log('요청 URL:', url);
       
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        mode: 'cors',
-      });
+      const response = await apiClient.get<BackendLessonDetail[]>(url);
       
-      console.log('스포츠별 검색 응답 상태:', response.status);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('스포츠별 검색 HTTP 오류:', errorText);
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-      }
-      
-      const data = await response.json();
-      console.log('스포츠별 검색 응답 데이터:', data);
-      
-      if (Array.isArray(data)) {
-        console.log('스포츠별 검색 결과 개수:', data.length);
-        return data;
+      if (response.success && response.data) {
+        console.log('스포츠별 검색 결과 개수:', response.data.length);
+        return response.data;
       } else {
-        throw new Error('스포츠별 검색 응답이 배열 형태가 아닙니다');
+        console.warn('스포츠별 검색 실패:', response.error);
+        return [];
       }
     } catch (error) {
       console.error('스포츠별 수업 검색 오류:', error);
-      throw error;
+      return [];
     }
   }
 

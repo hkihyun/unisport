@@ -163,7 +163,7 @@ export const API_ENDPOINTS = {
     BY_DATE: '/lessons/by-date',
     SEARCH: '/lessons/search',
     BY_INSTRUCTOR: '/lessons/instructor',
-    BY_SPORT: '/lessons/sport',
+    BY_SPORT: '/lessons/by-sport',
   },
   
   // 예약 관련
