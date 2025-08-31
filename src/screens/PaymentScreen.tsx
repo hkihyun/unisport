@@ -11,8 +11,16 @@ export const PaymentScreen: React.FC<any> = ({ navigation }) => {
 	return (
 		<View style={styles.container}>
 			<StatusBar barStyle="dark-content" backgroundColor="white" />
-			<Header title="UnisportCard 구독" showLogo={true} customIcon={<LeftArrowBlue width={32} height={32} />} />
-
+      {/* 네비게이션 헤더 */}
+      <Header 
+        title="UnisportCard 구독" 
+        showLogo={true} 
+        customIcon={
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <LeftArrowBlue width={32} height={32} />
+          </TouchableOpacity>
+        } 
+      />
 			<ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
 				{/* 구독 정보 섹션 */}
 				<View style={styles.firstSection}>

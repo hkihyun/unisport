@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ScrollView, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ScrollView, StatusBar, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS } from '../constants/colors';
 import { SCREENS } from '../constants/screens';
@@ -26,8 +26,30 @@ export const CreateLessonInfoScreen: React.FC<any> = ({ navigation }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [isInstructorVerified, setIsInstructorVerified] = useState(false);
+  const [showSportModal, setShowSportModal] = useState(false);
 
   const days = ['월', '화', '수', '목', '금', '토', '일'];
+
+  // 종목 데이터 (LessonListScreen에서 가져온 데이터)
+  const sportCategories = {
+    'ㄱ': ['걷기', '계단오르기', '검도', '골프', '근력운동'],
+    'ㄴ': ['농구', '노르딕워킹'],
+    'ㄷ': ['당구', '덤벨 트레이닝', '댄스', '등산'],
+    'ㄹ': ['라이딩', '러닝', '롤러스케이팅', '라켓볼'],
+    'ㅁ': ['마라톤', '맨몸운동'],
+    'ㅂ': ['배드민턴', '배구', '복싱', '볼링', '바이크'],
+    'ㅅ': ['수영', '스쿼시', '스케이트보드', '스피닝', '서킷 트레이닝'],
+    'ㅇ': ['요가', '에어로빅', '워킹', '유산소 서킷'],
+    'ㅈ': ['자전거', '족구', '주짓수', '줄넘기'],
+    'ㅊ': ['축구', '철봉 운동', '체조'],
+    'ㅋ': ['클라이밍', '크로스핏', '킥복싱'],
+    'ㅌ': ['탁구', '태권도', '테니스', '트레킹'],
+    'ㅍ': ['필라테스', '푸시업', '파워워킹'],
+    'ㅎ': ['하이킹', '헬스', '합기도']
+  };
+
+  // 모든 종목을 하나의 배열로 만들기
+  const allSports = Object.values(sportCategories).flat();
 
   // 강사 인증 상태를 AsyncStorage에서 확인
   useEffect(() => {
@@ -221,13 +243,15 @@ export const CreateLessonInfoScreen: React.FC<any> = ({ navigation }) => {
           {/* 종목 필드 */}
           <View style={styles.fieldContainer}>
             <Text style={styles.fieldLabel}>종목</Text>
-            <TextInput
-              style={styles.inputField}
-              value={sport}
-              onChangeText={setSport}
-              placeholder="종목"
-              placeholderTextColor="#999"
-            />
+            <TouchableOpacity
+              style={styles.sportSelector}
+              onPress={() => setShowSportModal(true)}
+            >
+              <Text style={sport ? styles.sportSelectorText : styles.sportSelectorPlaceholder}>
+                {sport || '종목을 선택해주세요'}
+              </Text>
+              <Text style={styles.sportSelectorArrow}>▼</Text>
+            </TouchableOpacity>
           </View>
 
           {/* 수업명 필드 */}
@@ -361,6 +385,58 @@ export const CreateLessonInfoScreen: React.FC<any> = ({ navigation }) => {
           <Text style={styles.bottomButtonText}>수업 개설하기</Text>
         </TouchableOpacity>
       </View>
+
+      {/* 종목 선택 모달 */}
+      <Modal
+        visible={showSportModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowSportModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>종목 선택</Text>
+              <TouchableOpacity
+                style={styles.modalCloseButton}
+                onPress={() => setShowSportModal(false)}
+              >
+                <Text style={styles.modalCloseText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView style={styles.sportListContainer} showsVerticalScrollIndicator={false}>
+              {Object.entries(sportCategories).map(([category, sports]) => (
+                <View key={category} style={styles.categoryContainer}>
+                  <Text style={styles.categoryTitle}>{category}</Text>
+                  <View style={styles.sportsGrid}>
+                    {sports.map((sportName) => (
+                      <TouchableOpacity
+                        key={sportName}
+                        style={[
+                          styles.sportItem,
+                          sport === sportName && styles.sportItemSelected
+                        ]}
+                        onPress={() => {
+                          setSport(sportName);
+                          setShowSportModal(false);
+                        }}
+                      >
+                        <Text style={[
+                          styles.sportItemText,
+                          sport === sportName && styles.sportItemTextSelected
+                        ]}>
+                          {sportName}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
 
 
     </View>
@@ -519,6 +595,110 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 
+  sportSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    height: 48,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    backgroundColor: 'white',
+  },
+  sportSelectorText: {
+    color: '#333',
+    fontSize: 16,
+  },
+  sportSelectorPlaceholder: {
+    color: '#999',
+    fontSize: 16,
+  },
+  sportSelectorArrow: {
+    fontSize: 16,
+    color: '#999',
+  },
+
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContainer: {
+    backgroundColor: 'white',
+    borderRadius: 10,
+    width: '90%',
+    maxHeight: '70%',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  modalCloseButton: {
+    padding: 5,
+  },
+  modalCloseText: {
+    fontSize: 24,
+    color: '#999',
+  },
+  sportListContainer: {
+    paddingHorizontal: 15,
+    paddingBottom: 15,
+  },
+  categoryContainer: {
+    marginBottom: 20,
+  },
+  categoryTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#5981FA',
+    marginBottom: 10,
+  },
+  sportsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  sportItem: {
+    width: '48%', // 2개씩 배치
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+    marginBottom: 10,
+    backgroundColor: 'white',
+  },
+  sportItemSelected: {
+    borderColor: '#5981FA',
+    borderWidth: 2,
+  },
+  sportItemText: {
+    fontSize: 14,
+    color: '#333',
+  },
+  sportItemTextSelected: {
+    color: '#5981FA',
+    fontWeight: 'bold',
+  },
 
   bottomContainer: {
     position: 'absolute',
