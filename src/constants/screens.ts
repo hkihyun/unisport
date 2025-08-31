@@ -75,9 +75,11 @@ export const SCREENS = {
   ...FAVORITES_SCREENS,
   ...BOOKING_SCREENS,
   ...PROFILE_SCREENS,
-  ...LESSON_SCREENS,
-  SPORT_LESSONS: 'SportLessons',
-} as const;
+      ...LESSON_SCREENS,
+    SPORT_LESSONS: 'SportLessons',
+    ATTENDANCE_CHECK: 'AttendanceCheck',
+    ALARM_SETTINGS: 'AlarmSettings',
+  } as const;
 
 // 화면 이름 타입
 export type ScreenName = typeof SCREENS[keyof typeof SCREENS];

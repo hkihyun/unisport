@@ -25,6 +25,8 @@ type RootStackParamList = {
   [SCREENS.OPEN_LESSONS]: undefined;
   [SCREENS.PAYMENT]: undefined;
   [SCREENS.CUSTOMER_SERVICE]: undefined;
+  [SCREENS.ATTENDANCE_CHECK]: undefined;
+  [SCREENS.ALARM_SETTINGS]: undefined;
 };
 
 type RouteParams = {
@@ -348,10 +350,13 @@ export const ProfileScreen: React.FC = () => {
 
       {/* 두 번째 메뉴 그룹: 일반 사용자 기능들 */}
       <View style={styles.secondMenuGroup}>
-        {/* 출석확인 메뉴 (현재 미구현) */}
-        <TouchableOpacity style={styles.menuItem} onPress={() => Alert.alert('출석확인', '출석확인 기능은 추후 구현 예정입니다.')}>
+        {/* 출석확인 메뉴 */}
+        <TouchableOpacity 
+          style={styles.menuItem} 
+          onPress={() => navigation.navigate(SCREENS.ATTENDANCE_CHECK)}
+        >
           <View style={styles.menuIcon}>
-            <Text style={styles.menuIconText}>✅</Text> {/* 체크마크 이모지로 확인/완료를 나타냄 */}
+            <Image source={require('../../assets/icons/CheckAttendance.png')} style={styles.menuIconImage} />
           </View>
           <Text style={styles.menuText}>출석확인</Text>
           <Text style={styles.menuArrow}>{'›'}</Text>
@@ -378,8 +383,11 @@ export const ProfileScreen: React.FC = () => {
 
       {/* 세 번째 메뉴 그룹: 설정 및 고객지원 */}
       <View style={styles.thirdMenuGroup}>
-                 {/* 설정 메뉴 (현재 미구현) */}
-         <TouchableOpacity style={styles.menuItem} onPress={() => Alert.alert('설정', '설정 기능은 추후 구현 예정입니다.')}>
+                         {/* 설정 메뉴 */}
+        <TouchableOpacity 
+          style={styles.menuItem} 
+          onPress={() => navigation.navigate(SCREENS.ALARM_SETTINGS)}
+        >
            <View style={styles.menuIcon}>
              <Image source={require('../../assets/icons/Setting.png')} style={styles.menuIconImage} />
            </View>
