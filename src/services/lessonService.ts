@@ -107,6 +107,20 @@ export class LessonService {
     lessonTime: string;
   }): Promise<ApiResponse<any>> {
     try {
+      function addHoursToTime(time: string, hours: number): string {
+        // "14:00" → [14, 0]
+        const [hh, mm] = time.split(":").map(Number);
+
+        // Date 객체 활용 (기준 날짜는 아무거나, 여기선 1970-01-01)
+        const date = new Date(1970, 0, 1, hh, mm);
+
+        // 시간 더하기
+        date.setHours(date.getHours() + hours);
+
+        // HH:mm 형식으로 리턴
+        return date.toTimeString().slice(0, 5); 
+      }
+
       console.log('🚀 새로운 레슨 생성 API 호출:', lessonData);
       
       const response = await fetch('https://unisportserver.onrender.com/lessons', {
@@ -116,18 +130,18 @@ export class LessonService {
           'Accept': 'application/json',
         },
         body: JSON.stringify({
-          id: null,
           sport: lessonData.sport,
           title: lessonData.title,
           description: lessonData.description,
           level: lessonData.level,
+          instructorUserId: lessonData.instructorUserId,
           location: lessonData.location,
           capacity: lessonData.capacity,
-          reserved_count: 0,
-          reservationStatus: 'AVAILABLE',
-          instructorUserId: lessonData.instructorUserId,
-          lessonDate: lessonData.lessonDate,
-          lessonTime: lessonData.lessonTime,
+          intervalWeeks: 1,
+          totalCount: 8,
+          startTime: lessonData.lessonTime,
+          endTime: addHoursToTime(lessonData.lessonTime, 2),
+          startDate: lessonData.lessonDate
         }),
       });
 
