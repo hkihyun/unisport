@@ -232,8 +232,9 @@ export interface BackendReviewResponse {
 export interface BackendReservation {
   id: number;
   userId: number;
-  lessonId: number;
+  lessonScheduleId: number; // lessonId -> lessonScheduleId로 변경
   createdAt: string;
+  attendanceId: number; // attendanceId 필드 추가
 }
 
 // 백엔드 API 예약 생성 요청 타입 (POST /reservations)
@@ -252,6 +253,4 @@ export interface CreateReservationResponse {
 }
 
 // 백엔드 API 예약 목록 응답 타입 (GET /reservations/{userId} 응답)
-export interface BackendReservationResponse {
-  content: BackendReservation[];
-}
+// 백엔드에서 배열을 직접 반환하므로 별도 래퍼 타입 불필요

@@ -9,16 +9,11 @@ import { useAuth } from '../hooks/useAuth';
 import { SCREENS } from '../constants/screens';
 import { SeeMoreIcon } from '../../assets/icons/SeeMore';
 
-// 안전한 데이터 추출 함수
+// 안전한 데이터 추출 함수 - 백엔드에서 배열을 직접 반환하므로 단순화
 const extractReservations = (response: any): BackendReservation[] => {
 	if (!response) return [];
 	
-	// response.content가 배열인 경우 (페이지네이션 구조)
-	if (response.content && Array.isArray(response.content)) {
-		return response.content;
-	}
-	
-	// response 자체가 배열인 경우 (직접 배열 반환)
+	// response가 배열인 경우 (백엔드에서 직접 배열 반환)
 	if (Array.isArray(response)) {
 		return response;
 	}
@@ -76,15 +71,13 @@ export const HomeScreen: React.FC<any> = ({ navigation }) => {
 		try {
 			setLoading(true);
 			setError(null);
-			const response = await ReservationService.getUserReservations(parseInt(user.id));
+			const reservations = await ReservationService.getUserReservations(parseInt(user.id));
 			
-			// 안전한 데이터 접근 - response.content가 undefined일 수 있음
-			const reservations = response?.content || [];
 			setReservations(reservations);
 			
 			// 수업 상세 정보 가져오기
 			if (reservations.length > 0) {
-				const lessonIds = reservations.map(reservation => reservation.lessonId);
+				const lessonIds = reservations.map(reservation => reservation.lessonScheduleId);
 				await fetchLessonDetails(lessonIds);
 			}
 		} catch (err) {
@@ -103,15 +96,13 @@ export const HomeScreen: React.FC<any> = ({ navigation }) => {
 			setTodayLoading(true);
 			setTodayError(null);
 			const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD 형식
-			const response = await ReservationService.getReservationsByDate(parseInt(user.id), today);
+			const todayReservations = await ReservationService.getReservationsByDate(parseInt(user.id), today);
 			
-			// 안전한 데이터 접근 - response.content가 undefined일 수 있음
-			const todayReservations = response?.content || [];
 			setTodayReservations(todayReservations);
 			
 			// 오늘 수업 상세 정보 가져오기
 			if (todayReservations.length > 0) {
-				const lessonIds = todayReservations.map(reservation => reservation.lessonId);
+				const lessonIds = todayReservations.map(reservation => reservation.lessonScheduleId);
 				await fetchLessonDetails(lessonIds);
 			}
 		} catch (err) {
@@ -134,7 +125,12 @@ export const HomeScreen: React.FC<any> = ({ navigation }) => {
 		return `${month}월 ${day}일 ${weekdays[weekday]}요일`;
 	};
 
-	const formatDate = (dateString: string) => {
+	const formatDate = (dateString: string | undefined) => {
+		// dateString이 undefined인 경우 처리
+		if (!dateString) {
+			return '날짜 정보 없음';
+		}
+		
 		const date = new Date(dateString);
 		const month = date.getMonth() + 1;
 		const day = date.getDate();
@@ -144,18 +140,33 @@ export const HomeScreen: React.FC<any> = ({ navigation }) => {
 		return `${month}.${day}(${weekdays[weekday]})`;
 	};
 
-	const formatTime = (dateString: string) => {
-		const date = new Date(dateString);
-		const hours = date.getHours();
-		const minutes = date.getMinutes();
-		const ampm = hours >= 12 ? '오후' : '오전';
-		const displayHours = hours > 12 ? hours - 12 : hours;
+	const formatTime = (timeString: string | undefined) => {
+		// timeString이 undefined인 경우 처리
+		if (!timeString) {
+			return '시간 정보 없음';
+		}
 		
-		return `${ampm}${displayHours}:${minutes.toString().padStart(2, '0')}`;
+		// "HH:MM:SS" 형식을 "오전/오후 H:MM" 형식으로 변환
+		const [hours, minutes] = timeString.split(':');
+		const hour = parseInt(hours);
+		const minute = parseInt(minutes);
+		
+		if (hour < 12) {
+			return `오전 ${hour}:${minute.toString().padStart(2, '0')}`;
+		} else if (hour === 12) {
+			return `오후 ${hour}:${minute.toString().padStart(2, '0')}`;
+		} else {
+			return `오후 ${hour - 12}:${minute.toString().padStart(2, '0')}`;
+		}
 	};
 
 	// 날짜 헤더용 포맷팅 함수
-	const formatDateHeader = (dateString: string) => {
+	const formatDateHeader = (dateString: string | undefined) => {
+		// dateString이 undefined인 경우 처리
+		if (!dateString) {
+			return '날짜 정보 없음';
+		}
+		
 		const date = new Date(dateString);
 		const month = date.getMonth() + 1;
 		const day = date.getDate();
@@ -167,7 +178,7 @@ export const HomeScreen: React.FC<any> = ({ navigation }) => {
 
 	// 오늘의 첫 번째 수업 정보
 	const todayFirstLesson = todayReservations && todayReservations.length > 0 ? todayReservations[0] : null;
-	const todayFirstLessonDetail = todayFirstLesson ? lessonDetails[todayFirstLesson.lessonId] : null;
+	const todayFirstLessonDetail = todayFirstLesson ? lessonDetails[todayFirstLesson.lessonScheduleId] : null;
 
 	// 날짜별로 예약을 그룹화하는 함수
 	const groupReservationsByDate = (reservations: BackendReservation[]) => {
@@ -175,9 +186,11 @@ export const HomeScreen: React.FC<any> = ({ navigation }) => {
 		
 		reservations.forEach(reservation => {
 			// 수업 상세 정보에서 실제 수업 날짜를 가져옴
-			const lessonDetail = lessonDetails[reservation.lessonId];
-			if (lessonDetail && lessonDetail.lessonDate) {
-				const date = new Date(lessonDetail.lessonDate);
+			const lessonDetail = lessonDetails[reservation.lessonScheduleId];
+			if (lessonDetail && lessonDetail.schedules && lessonDetail.schedules.length > 0) {
+				// schedules 배열의 첫 번째 항목에서 날짜 정보 가져오기
+				const schedule = lessonDetail.schedules[0];
+				const date = new Date(schedule.date);
 				const dateKey = date.toISOString().split('T')[0]; // YYYY-MM-DD 형식
 				
 				if (!grouped[dateKey]) {
@@ -327,7 +340,7 @@ export const HomeScreen: React.FC<any> = ({ navigation }) => {
 									{/* 해당 날짜에 예약된 모든 수업들을 순회하며 렌더링 */}
 									{group.reservations.map((reservation, index) => {
 										// 현재 예약에 해당하는 수업 상세 정보를 가져옴
-										const lessonDetail = lessonDetails[reservation.lessonId];
+										const lessonDetail = lessonDetails[reservation.lessonScheduleId];
 										return (
 											// 각 수업 항목을 나타내는 타임라인 엔트리
 											<View key={reservation.id} style={styles.timelineEntry}>
@@ -343,12 +356,12 @@ export const HomeScreen: React.FC<any> = ({ navigation }) => {
 												<View style={styles.entryContent}>
 													{/* 수업 제목: 수업 상세 정보가 있으면 제목, 없으면 기본 텍스트 */}
 													<Text style={styles.entryTitle}>
-														{lessonDetail ? lessonDetail.title : `수업 #${reservation.lessonId}`}
+														{lessonDetail ? lessonDetail.title : `수업 #${reservation.lessonScheduleId}`}
 													</Text>
 													{/* 수업 날짜/시간: 실제 수업 날짜가 있으면 해당 날짜+시간, 없으면 예약 생성 날짜 */}
 													<Text style={styles.entryDateTime}>
-														{lessonDetail && lessonDetail.lessonDate 
-															? `${formatDate(lessonDetail.lessonDate)} ${lessonDetail.lessonTime || ''}`
+														{lessonDetail && lessonDetail.schedules && lessonDetail.schedules.length > 0
+															? `${formatDate(lessonDetail.schedules[0].date)} ${formatTime(lessonDetail.schedules[0].startTime)}`
 															: formatDate(reservation.createdAt)
 														}
 													</Text>
@@ -362,7 +375,7 @@ export const HomeScreen: React.FC<any> = ({ navigation }) => {
 												<TouchableOpacity 
 													onPress={() => navigation.navigate(SCREENS.BOOKING_CONFIRM, { 
 														type: 'book',
-														lessonId: reservation.lessonId.toString(),
+														lessonId: reservation.lessonScheduleId.toString(),
 														fromHome: true,
 														reservation,
 														lessonDetail

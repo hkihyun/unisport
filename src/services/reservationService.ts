@@ -1,5 +1,5 @@
 import { apiClient, API_ENDPOINTS } from './api';
-import { BackendReservationResponse, CreateReservationRequest, CreateReservationResponse } from '../types';
+import { BackendReservation, CreateReservationRequest, CreateReservationResponse } from '../types';
 
 // 디버깅을 위한 로그 추가
 console.log('API_ENDPOINTS in ReservationService:', API_ENDPOINTS);
@@ -7,9 +7,9 @@ console.log('RESERVATIONS:', API_ENDPOINTS?.RESERVATIONS);
 
 export class ReservationService {
   // 사용자의 예약 목록 조회
-  static async getUserReservations(userId: number): Promise<BackendReservationResponse> {
+  static async getUserReservations(userId: number): Promise<BackendReservation[]> {
     try {
-      const response = await apiClient.get<BackendReservationResponse>(
+      const response = await apiClient.get<BackendReservation[]>(
         `${API_ENDPOINTS.RESERVATIONS.BY_USER}/${userId}`,
         false // 인증이 필요하지 않음
       );
@@ -18,24 +18,20 @@ export class ReservationService {
         return response.data;
       } else {
         console.warn('예약 조회 실패:', response.error);
-        // 에러 발생 시 빈 응답 구조 반환
-        return {
-          content: []
-        };
+        // 에러 발생 시 빈 배열 반환
+        return [];
       }
     } catch (error) {
       console.error('Error fetching user reservations:', error);
-      // 에러 발생 시 빈 응답 구조 반환
-      return {
-        content: []
-      };
+      // 에러 발생 시 빈 배열 반환
+      return [];
     }
   }
 
   // 특정 날짜 예약 조회
-  static async getReservationsByDate(userId: number, date: string): Promise<BackendReservationResponse> {
+  static async getReservationsByDate(userId: number, date: string): Promise<BackendReservation[]> {
     try {
-      const response = await apiClient.get<BackendReservationResponse>(
+      const response = await apiClient.get<BackendReservation[]>(
         `${API_ENDPOINTS.RESERVATIONS.BY_USER}/${userId}/${date}`,
         false // 인증이 필요하지 않음
       );
@@ -44,17 +40,13 @@ export class ReservationService {
         return response.data;
       } else {
         console.warn('날짜별 예약 조회 실패:', response.error);
-        // 에러 발생 시 빈 응답 구조 반환
-        return {
-          content: []
-        };
+        // 에러 발생 시 빈 배열 반환
+        return [];
       }
     } catch (error) {
       console.error('Error fetching reservations by date:', error);
-      // 에러 발생 시 빈 응답 구조 반환
-      return {
-        content: []
-      };
+      // 에러 발생 시 빈 배열 반환
+      return [];
     }
   }
 
