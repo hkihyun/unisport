@@ -129,42 +129,35 @@ export const LessonListScreen = ({ navigation }: any) => {
     }
 
     try {
-      // 먼저 로컬 상태를 업데이트하여 즉시 UI 반영
-      setFavoriteLessons(prev => {
-        const newSet = new Set(prev);
-        const lessonIdStr = lessonId.toString();
-        if (newSet.has(lessonIdStr)) {
-          newSet.delete(lessonIdStr);
-        } else {
-          newSet.add(lessonIdStr);
-        }
-        return newSet;
-      });
-
-      // API 호출
-      await lessonLikeService.addToFavorites(lessonId, parseInt(user.id));
+      const isCurrentlyFavorite = favoriteLessons.has(lessonId.toString());
       
-      // 성공 메시지 (선택사항)
-      const isFavorite = favoriteLessons.has(lessonId.toString());
-      if (!isFavorite) {
-        Alert.alert('성공', '관심 레슨으로 등록되었습니다.');
-      } else {
+      if (isCurrentlyFavorite) {
+        // 관심과목 해제
+        await lessonLikeService.removeFromFavorites(lessonId, parseInt(user.id));
+        
+        // 로컬 상태 업데이트
+        setFavoriteLessons(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(lessonId.toString());
+          return newSet;
+        });
+        
         Alert.alert('성공', '관심 레슨에서 제거되었습니다.');
+      } else {
+        // 관심과목 등록
+        await lessonLikeService.addToFavorites(lessonId, parseInt(user.id));
+        
+        // 로컬 상태 업데이트
+        setFavoriteLessons(prev => {
+          const newSet = new Set(prev);
+          newSet.add(lessonId.toString());
+          return newSet;
+        });
+        
+        Alert.alert('성공', '관심 레슨으로 등록되었습니다.');
       }
     } catch (error: any) {
-      // 실패 시 원래 상태로 되돌리기
-      setFavoriteLessons(prev => {
-        const newSet = new Set(prev);
-        const lessonIdStr = lessonId.toString();
-        if (newSet.has(lessonIdStr)) {
-          newSet.delete(lessonIdStr);
-        } else {
-          newSet.add(lessonIdStr);
-        }
-        return newSet;
-      });
-      
-      Alert.alert('오류', error.message || '관심과목 등록에 실패했습니다.');
+      Alert.alert('오류', error.message || '관심과목 처리에 실패했습니다.');
     }
   };
 
@@ -772,7 +765,8 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     color: '#5981FA',
     lineHeight: 18,
-    marginTop: 'auto',
+    marginLeft: 70,
+    marginTop: -23
   },
   lessonImageContainer: {
     position: 'relative',

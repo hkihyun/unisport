@@ -5,6 +5,7 @@ import { StarIcon } from 'react-native-heroicons/solid';
 import { LessonService } from '../services/lessonService';
 import { AuthService, InstructorResponse } from '../services/authService';
 import { ReservationService } from '../services/reservationService';
+import { lessonLikeService } from '../services/lessonLikeService';
 import { BackendLessonDetail, BackendReview, BackendReviewResponse } from '../types';
 import { useAuth } from '../hooks/useAuth';
 import { DifficultyLevel } from '../../assets/icons/DifficultyIcon';
@@ -145,7 +146,7 @@ export const BookingDetailScreen: React.FC<any> = ({ navigation, route }) => {
 	};
 
 	// 찜 버튼
-	const handleHeartPress = () => {
+	const handleHeartPress = async () => {
 		// 로그인하지 않은 경우 로그인 안내
 		if (!isAuthenticated) {
 			Alert.alert(
@@ -162,21 +163,21 @@ export const BookingDetailScreen: React.FC<any> = ({ navigation, route }) => {
 			return;
 		}
 
-		// 관심과목 등록/해제 토글
-		setIsHeartPressed(!isHeartPressed);
-		
-		// TODO: 실제 API 호출로 관심과목 등록/해제 처리
-		// if (isHeartPressed) {
-		//   // 관심과목 해제
-		//   // await LessonService.removeFromFavorites(lessonId);
-		// } else {
-		//   // 관심과목 등록
-		//   // await LessonService.addToFavorites(lessonId);
-		// }
-		
-		// 사용자에게 피드백 제공
-		const message = isHeartPressed ? '관심과목에서 제거되었습니다.' : '관심과목에 등록되었습니다.';
-		Alert.alert('알림', message, [{ text: '확인' }]);
+		try {
+			if (isHeartPressed) {
+				// 관심과목 해제
+				await lessonLikeService.removeFromFavorites(lessonId, parseInt(user.id));
+				setIsHeartPressed(false);
+				Alert.alert('성공', '관심과목에서 제거되었습니다.', [{ text: '확인' }]);
+			} else {
+				// 관심과목 등록
+				await lessonLikeService.addToFavorites(lessonId, parseInt(user.id));
+				setIsHeartPressed(true);
+				Alert.alert('성공', '관심과목에 등록되었습니다.', [{ text: '확인' }]);
+			}
+		} catch (error: any) {
+			Alert.alert('오류', error.message || '관심과목 처리에 실패했습니다.', [{ text: '확인' }]);
+		}
 	};
 
 	// 로딩 중일 때

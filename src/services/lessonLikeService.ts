@@ -1,34 +1,13 @@
 import { apiClient } from './api';
+import { BackendLessonDetail } from '../types';
 
 export interface LessonLikeResponse {
   message: string;
   status: string;
 }
 
-export interface FavoriteLesson {
-  id: number;
-  lessonId: number;
-  userId: number;
-  lesson: {
-    id: number;
-    title: string;
-    lessonDate: string;
-    lessonTime: string;
-    location: string;
-    description?: string;
-    instructorId?: number;
-    maxParticipants?: number;
-    currentParticipants?: number;
-  };
-}
-
-export interface FavoriteLessonsResponse {
-  content: FavoriteLesson[];
-  totalElements: number;
-  totalPages: number;
-  size: number;
-  number: number;
-}
+// 백엔드 API 응답 형식에 맞게 수정
+export type FavoriteLesson = BackendLessonDetail;
 
 export const lessonLikeService = {
   // 관심 레슨 등록
@@ -47,42 +26,42 @@ export const lessonLikeService = {
     }
   },
 
-  // 관심 레슨 목록 조회 - 여러 가능한 엔드포인트 시도
-  getFavoriteLessons: async (userId: number): Promise<FavoriteLessonsResponse> => {
-    const possibleEndpoints = [
-      `/lessonLike?userId=${userId}`,
-      `/lessonLike/user/${userId}`,
-      `/lessonLike/favorites/${userId}`,
-      `/favorites?userId=${userId}`,
-      `/user/${userId}/favorites`,
-      `/user/${userId}/lessonLikes`
-    ];
-
-    for (const endpoint of possibleEndpoints) {
-      try {
-        console.log(`시도 중: ${endpoint}`);
-        const response = await apiClient.get<FavoriteLessonsResponse>(endpoint);
-        
-        if (response.success) {
-          console.log(`성공: ${endpoint}`);
-          return response.data as FavoriteLessonsResponse;
-        }
-      } catch (error) {
-        console.log(`실패: ${endpoint}`, error);
-        continue;
+  // 관심 레슨 목록 조회 - 백엔드 API 엔드포인트 사용
+  getFavoriteLessons: async (userId: number): Promise<FavoriteLesson[]> => {
+    try {
+      const response = await apiClient.get<FavoriteLesson[]>(`/lessonLike/user-like-lesson/${userId}`);
+      
+      if (!response.success) {
+        throw new Error(response.error || '관심 레슨 목록을 가져오는데 실패했습니다.');
       }
+      
+      return response.data as FavoriteLesson[];
+    } catch (error: any) {
+      console.error('관심 레슨 목록 조회 실패:', error);
+      throw new Error('관심 레슨 목록을 가져오는데 실패했습니다.');
     }
-
-    throw new Error('관심 레슨 목록을 가져올 수 있는 엔드포인트를 찾을 수 없습니다.');
   },
 
   // 관심 레슨 제거
   removeFromFavorites: async (lessonId: number, userId: number): Promise<LessonLikeResponse> => {
     try {
+      console.log('API 호출 시작 - removeFromFavorites:', { lessonId, userId });
       const response = await apiClient.delete<LessonLikeResponse>(`/lessonLike/${lessonId}?userId=${userId}`);
+      console.log('API 응답:', response);
+      
       if (!response.success) {
+        console.error('API 응답 실패:', response.error);
         throw new Error(response.error || '관심 레슨 제거에 실패했습니다.');
       }
+      
+      // 백엔드에서 NOT_FOUND를 반환하는 경우 처리
+      if (response.data === 'NOT_FOUND') {
+        console.log('관심 레슨이 이미 제거되었거나 존재하지 않음');
+        // NOT_FOUND는 성공으로 처리 (이미 제거된 상태)
+        return { message: '관심 레슨이 이미 제거되었습니다.', status: 'REMOVED' };
+      }
+      
+      console.log('API 호출 성공:', response.data);
       return response.data as LessonLikeResponse;
     } catch (error: any) {
       console.error('API Error:', error);

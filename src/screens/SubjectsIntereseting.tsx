@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Alert, ActivityIndicator } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { COLORS } from '../constants/colors';
 import { HeartIcon } from '../../assets/icons/HeartIcon';
 import { lessonLikeService, FavoriteLesson } from '../services/lessonLikeService';
@@ -27,7 +28,7 @@ export const SubjectsInterestingScreen: React.FC<any> = ({ navigation }) => {
 			setLoading(true);
 			setError(null);
 			const response = await lessonLikeService.getFavoriteLessons(parseInt(user.id));
-			setFavoriteLessons(response.content || []);
+			setFavoriteLessons(response || []);
 		} catch (err: any) {
 			console.error('관심 레슨 목록 조회 실패:', err);
 			setError(err.message || '관심 레슨 목록을 가져오는데 실패했습니다.');
@@ -43,20 +44,30 @@ export const SubjectsInterestingScreen: React.FC<any> = ({ navigation }) => {
 			return;
 		}
 
-		try {
-			await lessonLikeService.removeFromFavorites(lessonId, parseInt(user.id));
-			
-			// 성공 시 로컬 상태에서 제거
-			setFavoriteLessons(prev => prev.filter(lesson => lesson.lessonId !== lessonId));
-			
+			try {
+		console.log('관심과목 제거 시작:', lessonId, 'userId:', user.id);
+		const response = await lessonLikeService.removeFromFavorites(lessonId, parseInt(user.id));
+		console.log('관심과목 제거 성공:', response);
+		
+		// 성공 시 로컬 상태에서 제거 (NOT_FOUND도 성공으로 처리)
+		setFavoriteLessons(prev => prev.filter(lesson => lesson.id !== lessonId));
+		
+		// 응답에 따른 메시지 표시
+		if (response.status === 'REMOVED') {
+			Alert.alert('알림', '관심과목이 이미 제거되었습니다.');
+		} else {
 			Alert.alert('성공', '관심과목에서 제거되었습니다.');
-		} catch (err: any) {
-			Alert.alert('오류', err.message || '관심과목 제거에 실패했습니다.');
 		}
+	} catch (err: any) {
+		console.error('관심과목 제거 실패:', err);
+		Alert.alert('오류', err.message || '관심과목 제거에 실패했습니다.');
+	}
 	};
 
 	// 날짜 포맷팅 함수
-	const formatDate = (dateString: string) => {
+	const formatDate = (dateString: string | undefined) => {
+		if (!dateString) return '날짜 정보 없음';
+		
 		const date = new Date(dateString);
 		const month = date.getMonth() + 1;
 		const day = date.getDate();
@@ -67,10 +78,10 @@ export const SubjectsInterestingScreen: React.FC<any> = ({ navigation }) => {
 	};
 
 	// 시간 포맷팅 함수
-	const formatTime = (timeString: string) => {
+	const formatTime = (timeString: string | undefined) => {
 		if (!timeString) return '';
 		
-		// HH:mm 형식으로 가정
+		// "HH:MM:SS" 형식을 "오전/오후 H:MM" 형식으로 변환
 		const [hours, minutes] = timeString.split(':');
 		const hour = parseInt(hours);
 		const ampm = hour >= 12 ? '오후' : '오전';
@@ -82,6 +93,16 @@ export const SubjectsInterestingScreen: React.FC<any> = ({ navigation }) => {
 	useEffect(() => {
 		fetchFavoriteLessons();
 	}, [user]);
+
+	// 페이지에 포커스가 될 때마다 데이터 새로 가져오기
+	useFocusEffect(
+		React.useCallback(() => {
+			if (user) {
+				console.log('관심과목 페이지 포커스 - 데이터 새로 가져오기');
+				fetchFavoriteLessons();
+			}
+		}, [user])
+	);
 
 	// 새로고침 함수
 	const handleRefresh = () => {
@@ -168,18 +189,20 @@ export const SubjectsInterestingScreen: React.FC<any> = ({ navigation }) => {
 							<View style={styles.lessonCard}>
 								<View style={styles.cardLeft}>
 									<Text style={styles.cardTime}>
-										{lesson.lesson.lessonDate && formatDate(lesson.lesson.lessonDate)}
-										{lesson.lesson.lessonTime && ` ${formatTime(lesson.lesson.lessonTime)}`}
+										{lesson.schedules && lesson.schedules.length > 0 && (
+											<>
+												{formatDate(lesson.schedules[0].date)}
+												{lesson.schedules[0].startTime && ` ${formatTime(lesson.schedules[0].startTime)}`}
+											</>
+										)}
 									</Text>
-									<Text style={styles.cardTitle}>{lesson.lesson.title}</Text>
-									<Text style={styles.cardPlace}>{lesson.lesson.location}</Text>
+									<Text style={styles.cardTitle}>{lesson.title}</Text>
+									<Text style={styles.cardPlace}>{lesson.location}</Text>
 								</View>
 								<View style={styles.cardRight}>
-									<View style={styles.cardThumb} />
-									<Text style={styles.availableText}>예약가능</Text>
 									<TouchableOpacity 
 										style={styles.heartContainer}
-										onPress={() => removeFromFavorites(lesson.lessonId)}
+										onPress={() => removeFromFavorites(lesson.id)}
 									>
 										<HeartIcon 
 											size={30} 
@@ -370,6 +393,7 @@ const styles = StyleSheet.create({
 	},
 	cardRight: {
 		alignItems: 'center',
+		marginRight: 50
 	},
 	cardThumb: {
 		width: 50,
@@ -382,10 +406,10 @@ const styles = StyleSheet.create({
 		fontSize: 14,
 		color: COLORS.SECONDARY,
 		fontWeight: 'bold',
-		marginBottom: 10,
 	},
 	heartContainer: {
 		padding: 5,
+		marginTop: 20
 	},
 });
 
