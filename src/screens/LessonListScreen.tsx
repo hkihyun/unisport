@@ -5,7 +5,11 @@ import { BackendLesson } from '../types';
 import { SCREENS } from '../constants/screens';
 import { useAuth } from '../hooks/useAuth';
 import { Header } from '../components/Header';
-import { LeftArrowBlue } from '../../assets/icons/LeftArrow_blue';
+import { LeftArrowGray } from '../../assets/icons/LeftArrow_gray';
+import SearchIcon from '../../assets/icons/Search';
+import MicIcon from '../../assets/icons/mic';
+import { HeartIcon } from '../../assets/icons/HeartIcon';
+import { lessonLikeService } from '../services/lessonLikeService';
 
 // 화면 크기
 const { width, height } = Dimensions.get('window');
@@ -29,13 +33,17 @@ const SPORTS_DATA = {
 };
 
 export const LessonListScreen = ({ navigation }: any) => {
-  const { isAuthenticated } = useAuth(); // 로그인 상태 확인
+  const { isAuthenticated, user } = useAuth(); // user 정보 추가
   const [currentStep, setCurrentStep] = useState<'sports' | 'lessons'>('sports');
   const [selectedSport, setSelectedSport] = useState<string>('');
   const [searchText, setSearchText] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [lessons, setLessons] = useState<BackendLesson[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // 관심과목 상태 관리
+  const [favoriteLessons, setFavoriteLessons] = useState<Set<string>>(new Set());
   
   // 스크롤 뷰 참조
   const scrollViewRef = useRef<ScrollView>(null);
@@ -103,12 +111,74 @@ export const LessonListScreen = ({ navigation }: any) => {
     navigation.navigate(SCREENS.LESSON_DETAIL, { lessonId: lesson.id });
   };
 
-  // 수업을 시간순으로 정렬
+  // 관심과목 토글 함수
+  const toggleFavorite = async (lessonId: number) => {
+    if (!isAuthenticated || !user) {
+      Alert.alert('로그인 필요', '관심과목을 등록하려면 로그인이 필요합니다.', [
+        { text: '취소', style: 'cancel' },
+        { 
+          text: '로그인하기', 
+          onPress: () => navigation.navigate(SCREENS.LOGIN)
+        }
+      ]);
+      return;
+    }
+
+    try {
+      // 먼저 로컬 상태를 업데이트하여 즉시 UI 반영
+      setFavoriteLessons(prev => {
+        const newSet = new Set(prev);
+        const lessonIdStr = lessonId.toString();
+        if (newSet.has(lessonIdStr)) {
+          newSet.delete(lessonIdStr);
+        } else {
+          newSet.add(lessonIdStr);
+        }
+        return newSet;
+      });
+
+      // API 호출
+      await lessonLikeService.addToFavorites(lessonId, parseInt(user.id));
+      
+      // 성공 메시지 (선택사항)
+      const isFavorite = favoriteLessons.has(lessonId.toString());
+      if (!isFavorite) {
+        Alert.alert('성공', '관심 레슨으로 등록되었습니다.');
+      } else {
+        Alert.alert('성공', '관심 레슨에서 제거되었습니다.');
+      }
+    } catch (error: any) {
+      // 실패 시 원래 상태로 되돌리기
+      setFavoriteLessons(prev => {
+        const newSet = new Set(prev);
+        const lessonIdStr = lessonId.toString();
+        if (newSet.has(lessonIdStr)) {
+          newSet.delete(lessonIdStr);
+        } else {
+          newSet.add(lessonIdStr);
+        }
+        return newSet;
+      });
+      
+      Alert.alert('오류', error.message || '관심과목 등록에 실패했습니다.');
+    }
+  };
+
+  // 수업을 날짜순으로 정렬 (가장 빠른 날짜부터)
   const sortedLessons = [...lessons].sort((a, b) => {
+    // 먼저 날짜로 정렬
+    const dateA = new Date(a.lessonDate);
+    const dateB = new Date(b.lessonDate);
+    
+    if (dateA.getTime() !== dateB.getTime()) {
+      return dateA.getTime() - dateB.getTime();
+    }
+    
+    // 날짜가 같으면 시간으로 정렬
     const timeA = new Date(`2025-01-01 ${a.lessonTime}`);
     const timeB = new Date(`2025-01-01 ${b.lessonTime}`);
     return timeA.getTime() - timeB.getTime();
-  });
+  }); 
 
   // 검색어에 따라 스포츠 목록을 필터링하는 함수
   const getFilteredSports = () => {
@@ -130,6 +200,26 @@ export const LessonListScreen = ({ navigation }: any) => {
     });
     
     return filtered;
+  };
+
+  // 인기 검색어 데이터
+  const POPULAR_SEARCH_TERMS = [
+    '요가', '초보 요가', '고급 요가', '축구', '요까'
+  ];
+
+  // 최근 검색어 데이터
+  const RECENT_SEARCH_TERMS = ['요가', '요가', '요가'];
+
+  // 검색어 선택 처리
+  const handleSearchTermSelect = (term: string) => {
+    setSearchText(term);
+    setIsSearchFocused(false);
+  };
+
+  // 전체 삭제 처리
+  const handleClearAllRecent = () => {
+    // 최근 검색어를 모두 삭제하는 로직
+    console.log('최근 검색어 전체 삭제');
   };
 
   // 초성 클릭 시 해당 위치로 스크롤하는 함수
@@ -173,25 +263,55 @@ export const LessonListScreen = ({ navigation }: any) => {
     
     return (
       <View style={styles.contentContainer}>
-        {/* Search Bar */}
-        <View style={styles.searchBar}>
-          <View style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="검색"
-            placeholderTextColor="#FEFEFE"
-            value={searchText}
-            onChangeText={setSearchText}
-          />
-          {searchText.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchText('')} style={styles.clearButton}>
-              <Text style={styles.clearButtonText}>✕</Text>
+                 {/* Search Bar */}
+         <View style={styles.searchBar}>
+             <SearchIcon size={20} color="#FEFEFE" />
+           <TextInput
+             style={styles.searchInput}
+             placeholder="검색"
+             placeholderTextColor="#FEFEFE"
+             value={searchText}
+             onChangeText={setSearchText}
+             onFocus={() => setIsSearchFocused(true)}
+             onBlur={() => {
+               // 검색어가 비어있을 때만 포커스 해제
+               if (!searchText.trim()) {
+                 setIsSearchFocused(false);
+               }
+             }}
+           />
+           {searchText.length > 0 && (
+             <TouchableOpacity onPress={() => setSearchText('')} style={styles.clearButton}>
+               <Text style={styles.clearButtonText}>✕</Text>
+             </TouchableOpacity>
+           )}
+                       <TouchableOpacity style={styles.micIcon}>
+              <MicIcon size={20} color="#FEFEFE" />
             </TouchableOpacity>
-          )}
-          <TouchableOpacity style={styles.micIcon}>
-            <Text style={styles.micIconText}>🎤</Text>
-          </TouchableOpacity>
-        </View>
+         </View>
+
+         {/* 검색 모드일 때 인기 검색어와 최근 검색어 표시 */}
+         {isSearchFocused && (
+           <View style={styles.searchSuggestions}>
+
+
+             {/* 인기 검색어 */}
+             <View style={styles.searchSection}>
+               <Text style={styles.searchSectionTitle}>인기 검색어</Text>
+               <View style={styles.searchTagsContainer}>
+                 {POPULAR_SEARCH_TERMS.map((term, index) => (
+                   <TouchableOpacity
+                     key={`popular-${index}`}
+                     style={styles.searchTag}
+                     onPress={() => handleSearchTermSelect(term)}
+                   >
+                     <Text style={styles.searchTagText}>{term}</Text>
+                   </TouchableOpacity>
+                 ))}
+               </View>
+             </View>
+           </View>
+         )}
 
         {/* Sports List */}
         <ScrollView 
@@ -253,7 +373,7 @@ export const LessonListScreen = ({ navigation }: any) => {
       {/* Navigation */}
       <View style={styles.navigation}>
         <TouchableOpacity onPress={handleBack}>
-          <View style={styles.backArrow} />
+          <LeftArrowGray width={32} height={32} />
         </TouchableOpacity>
         <Text style={styles.navTitle}>{selectedSport}</Text>
       </View>
@@ -287,15 +407,15 @@ export const LessonListScreen = ({ navigation }: any) => {
             <View style={styles.timelineContainer}>
               {/* Timeline Lines */}
               {sortedLessons.map((_, index) => {
-                if (index < sortedLessons.length - 1) {
+                if (index < sortedLessons.length ) {
                   return (
                     <View 
                       key={`line-${index}`} 
                       style={[
                         styles.timelineLine, 
                         { 
-                          top: (index * 40) + 20,
-                          height: 40
+                          top: (index * 165) + 20, // timelineDot의 중앙 위치에서 시작
+                          height: 105, // 다음 수업 아이템의 timelineDot 중앙까지의 거리
                         }
                       ]} 
                     />
@@ -333,6 +453,21 @@ export const LessonListScreen = ({ navigation }: any) => {
                         </View>
                       )}
                     </View>
+                    
+                    {/* Heart Icon */}
+                    <TouchableOpacity 
+                      style={styles.heartIconContainer}
+                      onPress={(e) => {
+                        e.stopPropagation(); // 카드 클릭 이벤트와 분리
+                        toggleFavorite(lesson.id);
+                      }}
+                    >
+                      <HeartIcon 
+                        size={30} 
+                        color="#5981FA" 
+                        filled={favoriteLessons.has(lesson.id.toString())}
+                      />
+                    </TouchableOpacity>
                   </TouchableOpacity>
                 </View>
               ))}
@@ -348,10 +483,10 @@ export const LessonListScreen = ({ navigation }: any) => {
       {/* Header를 SafeAreaView 밖으로 이동하여 paddingTop: 50이 적용되도록 함 */}
       <Header 
         title="수업리스트" 
-        showLogo={true} 
+        showLogo={false} 
         customIcon={
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <LeftArrowBlue width={32} height={32} />
+            <LeftArrowGray width={32} height={32} />
           </TouchableOpacity>
         } 
       />
@@ -373,7 +508,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     width: 393,
     backgroundColor: '#FEFEFE',
-    paddingTop: 50,
+    paddingTop: 60,
   },
   contentContainer: {
     flex: 1,
@@ -428,13 +563,8 @@ const styles = StyleSheet.create({
   micIcon: {
     width: 22,
     height: 22,
-    backgroundColor: '#FEFEFE',
-    borderRadius: 11,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  micIconText: {
-    fontSize: 12,
   },
   
   // Sports List
@@ -443,6 +573,7 @@ const styles = StyleSheet.create({
     paddingLeft: 20,
     paddingRight: 30,
     marginTop: 3,
+    marginBottom: 110
   },
   consonantHeader: {
     fontSize: 15,
@@ -462,9 +593,10 @@ const styles = StyleSheet.create({
   },
   sportDivider: {
     width: 372,
-    height: 0.5,
-    backgroundColor: '#A7B1CD',
-    marginLeft: -20,
+    height: 0.7,
+    backgroundColor: '#5981FA',
+    left: -10,
+
   },
   
   // Alphabet Index
@@ -511,6 +643,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#2B308B',
     lineHeight: 27,
+    marginLeft: 10,
   },
   
   // Lessons List
@@ -523,9 +656,11 @@ const styles = StyleSheet.create({
   },
   timelineLine: {
     position: 'absolute',
-    left: 9,
-    width: 2,
+    left: 10,
+    top: 10,
     backgroundColor: '#5981FA',
+    width: 2,
+    height: 50,
   },
   lessonItem: {
     flexDirection: 'row',
@@ -541,7 +676,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#5981FA',
     borderRadius: 10.5,
     zIndex: 1,
-    borderWidth: 3,
     borderColor: '#FEFEFE',
   },
   /* 카드 */
@@ -610,7 +744,7 @@ const styles = StyleSheet.create({
   },
   lessonImageContainer: {
     position: 'relative',
-    marginRight: 0,
+    marginRight: 22,
     width: 94,
     height: 94,
   },
@@ -692,12 +826,65 @@ const styles = StyleSheet.create({
     color: '#2B308B',
     marginBottom: 8,
   },
-  noSearchResultsSubtext: {
-    fontSize: 14,
-    color: '#9CA3AF',
-    fontWeight: '400',
-  },
-});
+     noSearchResultsSubtext: {
+     fontSize: 14,
+     color: '#9CA3AF',
+     fontWeight: '400',
+   },
+   
+   // 검색 제안 스타일
+   searchSuggestions: {
+     backgroundColor: '#FEFEFE',
+     paddingHorizontal: 20,
+     paddingTop: 10,
+     paddingBottom: 20,
+   },
+   searchSection: {
+     marginBottom: 20,
+   },
+   searchSectionHeader: {
+     flexDirection: 'row',
+     justifyContent: 'space-between',
+     alignItems: 'center',
+     marginBottom: 12,
+   },
+   searchSectionTitle: {
+     fontSize: 16,
+     fontWeight: '600',
+     color: '#2B308B',
+   },
+   clearAllText: {
+     fontSize: 14,
+     color: '#9CA3AF',
+     fontWeight: '400',
+   },
+   searchTagsContainer: {
+     flexDirection: 'row',
+     flexWrap: 'wrap',
+     gap: 8,
+     marginTop: 20
+   },
+   searchTag: {
+     backgroundColor: '#F3F4F6',
+     paddingHorizontal: 12,
+     paddingVertical: 8,
+     borderRadius: 16,
+     borderWidth: 1,
+     borderColor: '#E5E7EB',
+   },
+   searchTagText: {
+     fontSize: 14,
+     color: '#2B308B',
+     fontWeight: '500',
+   },
+       heartIconContainer: {
+      position: 'absolute',
+      right: 10,
+      top: 62,
+      transform: [{ translateY: -15 }], // 하트 아이콘 높이의 절반만큼 위로 이동하여 정확한 중앙 정렬
+      zIndex: 2,
+    },
+ });
 
 export default LessonListScreen;
 

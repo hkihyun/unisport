@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator, Alert, SafeAreaView } from 'react-native';
 import { SCREENS } from '../constants/screens';
-import { StarIcon, HeartIcon as HeartIconSolid } from 'react-native-heroicons/solid';
-import { HeartIcon as HeartIconOutline } from 'react-native-heroicons/outline';
+import { StarIcon } from 'react-native-heroicons/solid';
 import { LessonService } from '../services/lessonService';
 import { AuthService, InstructorResponse } from '../services/authService';
 import { ReservationService } from '../services/reservationService';
@@ -10,7 +9,9 @@ import { BackendLessonDetail, BackendReview, BackendReviewResponse } from '../ty
 import { useAuth } from '../hooks/useAuth';
 import { DifficultyLevel } from '../../assets/icons/DifficultyIcon';
 import { LeftArrowBlue } from '../../assets/icons/LeftArrow_blue';
+import { HeartIcon } from '../../assets/icons/HeartIcon';
 import { Header } from '../components/Header';
+import { LeftArrowGray } from '../../assets/icons/LeftArrow_gray';
 
 const { width } = Dimensions.get('window');
 
@@ -99,6 +100,12 @@ export const BookingDetailScreen: React.FC<any> = ({ navigation, route }) => {
 
 		if (!lessonDetail) return;
 
+		// lessonDetail.id가 null인 경우 처리
+		if (lessonDetail.id === null) {
+			Alert.alert('오류', '수업 정보가 올바르지 않습니다.', [{ text: '확인' }]);
+			return;
+		}
+
 		try {
 			setIsReserving(true);
 			
@@ -127,6 +134,41 @@ export const BookingDetailScreen: React.FC<any> = ({ navigation, route }) => {
 		} finally {
 			setIsReserving(false);
 		}
+	};
+
+	// 찜 버튼
+	const handleHeartPress = () => {
+		// 로그인하지 않은 경우 로그인 안내
+		if (!isAuthenticated) {
+			Alert.alert(
+				'로그인 필요',
+				'관심과목을 등록하려면 로그인이 필요합니다.',
+				[
+					{ text: '취소', style: 'cancel' },
+					{ 
+						text: '로그인하기', 
+						onPress: () => navigation.navigate(SCREENS.LOGIN)
+					}
+				]
+			);
+			return;
+		}
+
+		// 관심과목 등록/해제 토글
+		setIsHeartPressed(!isHeartPressed);
+		
+		// TODO: 실제 API 호출로 관심과목 등록/해제 처리
+		// if (isHeartPressed) {
+		//   // 관심과목 해제
+		//   // await LessonService.removeFromFavorites(lessonId);
+		// } else {
+		//   // 관심과목 등록
+		//   // await LessonService.addToFavorites(lessonId);
+		// }
+		
+		// 사용자에게 피드백 제공
+		const message = isHeartPressed ? '관심과목에서 제거되었습니다.' : '관심과목에 등록되었습니다.';
+		Alert.alert('알림', message, [{ text: '확인' }]);
 	};
 
 	// 로딩 중일 때
@@ -182,7 +224,7 @@ export const BookingDetailScreen: React.FC<any> = ({ navigation, route }) => {
 			<View style={styles.fixedTopSection}>
 				{/* 뒤로가기 버튼 */}
 				<TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-					<Text style={styles.arrow}>‹</Text>
+					<LeftArrowGray width={29} height={29} />
 				</TouchableOpacity>
 				
 				{/* 수업 제목 */}
@@ -201,13 +243,13 @@ export const BookingDetailScreen: React.FC<any> = ({ navigation, route }) => {
 				{/* 찜 버튼 */}
 				<TouchableOpacity 
 					style={styles.heartButton}
-					onPress={() => setIsHeartPressed(!isHeartPressed)}
+					onPress={handleHeartPress}
 				>
-					{isHeartPressed ? (
-						<HeartIconSolid size={20} color="#5981FA" />
-					) : (
-						<HeartIconOutline size={20} color="#5981FA" />
-					)}
+					<HeartIcon 
+						size={28} 
+						color="#5981FA" 
+						filled={isHeartPressed}
+					/>
 				</TouchableOpacity>
 			</View>
 			

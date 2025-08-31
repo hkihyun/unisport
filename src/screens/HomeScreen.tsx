@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '../constants/colors';
 import ReservationService from '../services/reservationService';
@@ -8,6 +8,30 @@ import { BackendReservation, BackendLessonDetail } from '../types';
 import { useAuth } from '../hooks/useAuth';
 import { SCREENS } from '../constants/screens';
 import { SeeMoreIcon } from '../../assets/icons/SeeMore';
+
+// 안전한 데이터 추출 함수
+const extractReservations = (response: any): BackendReservation[] => {
+	if (!response) return [];
+	
+	// response.content가 배열인 경우 (페이지네이션 구조)
+	if (response.content && Array.isArray(response.content)) {
+		return response.content;
+	}
+	
+	// response 자체가 배열인 경우 (직접 배열 반환)
+	if (Array.isArray(response)) {
+		return response;
+	}
+	
+	// response.data가 배열인 경우
+	if (response.data && Array.isArray(response.data)) {
+		return response.data;
+	}
+	
+	// 예상치 못한 구조인 경우
+	console.warn('예상치 못한 API 응답 구조:', response);
+	return [];
+};
 
 export const HomeScreen: React.FC<any> = ({ navigation }) => {
 	const { isAuthenticated, user } = useAuth(); // user 정보 추가
@@ -53,16 +77,20 @@ export const HomeScreen: React.FC<any> = ({ navigation }) => {
 			setLoading(true);
 			setError(null);
 			const response = await ReservationService.getUserReservations(parseInt(user.id));
-			setReservations(response.content);
+			
+			// 안전한 데이터 접근 - response.content가 undefined일 수 있음
+			const reservations = response?.content || [];
+			setReservations(reservations);
 			
 			// 수업 상세 정보 가져오기
-			const lessonIds = response.content.map(reservation => reservation.lessonId);
-			if (lessonIds.length > 0) {
+			if (reservations.length > 0) {
+				const lessonIds = reservations.map(reservation => reservation.lessonId);
 				await fetchLessonDetails(lessonIds);
 			}
 		} catch (err) {
 			console.error('예약 정보 조회 실패:', err);
 			setError('예약 정보를 불러오는데 실패했습니다.');
+			setReservations([]); // 에러 시 빈 배열로 설정
 		} finally {
 			setLoading(false);
 		}
@@ -76,16 +104,20 @@ export const HomeScreen: React.FC<any> = ({ navigation }) => {
 			setTodayError(null);
 			const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD 형식
 			const response = await ReservationService.getReservationsByDate(parseInt(user.id), today);
-			setTodayReservations(response.content);
+			
+			// 안전한 데이터 접근 - response.content가 undefined일 수 있음
+			const todayReservations = response?.content || [];
+			setTodayReservations(todayReservations);
 			
 			// 오늘 수업 상세 정보 가져오기
-			const lessonIds = response.content.map(reservation => reservation.lessonId);
-			if (lessonIds.length > 0) {
+			if (todayReservations.length > 0) {
+				const lessonIds = todayReservations.map(reservation => reservation.lessonId);
 				await fetchLessonDetails(lessonIds);
 			}
 		} catch (err) {
 			console.error('오늘 예약 정보 조회 실패:', err);
 			setTodayError('오늘 예약 정보를 불러오는데 실패했습니다.');
+			setTodayReservations([]); // 에러 시 빈 배열로 설정
 		} finally {
 			setTodayLoading(false);
 		}
@@ -134,7 +166,7 @@ export const HomeScreen: React.FC<any> = ({ navigation }) => {
 	};
 
 	// 오늘의 첫 번째 수업 정보
-	const todayFirstLesson = todayReservations.length > 0 ? todayReservations[0] : null;
+	const todayFirstLesson = todayReservations && todayReservations.length > 0 ? todayReservations[0] : null;
 	const todayFirstLessonDetail = todayFirstLesson ? lessonDetails[todayFirstLesson.lessonId] : null;
 
 	// 날짜별로 예약을 그룹화하는 함수
@@ -230,13 +262,22 @@ export const HomeScreen: React.FC<any> = ({ navigation }) => {
 				
 				{/* 액션 버튼들 */}
 				<View style={styles.actionButtons}>
-					<TouchableOpacity style={styles.actionButton}>
+					<TouchableOpacity 
+						style={styles.actionButton}
+						onPress={() => navigation.navigate('SubjectsInteresting')}
+					>
 						<Text style={styles.actionButtonText}>관심과목</Text>
 						<Text style={styles.heartIcon}>♥</Text>
 					</TouchableOpacity>
-					<TouchableOpacity style={styles.actionButton}>
+					<TouchableOpacity 
+						style={styles.actionButton}
+						onPress={() => navigation.navigate('Review')}
+					>
 						<Text style={styles.actionButtonText}>리뷰쓰기</Text>
-						<Text style={styles.editIcon}>✎</Text>
+						<Image 
+							source={require('../../assets/icons/ReviewIcon.png')} 
+							style={styles.reviewIcon}
+						/>
 					</TouchableOpacity>
 				</View>
 				
@@ -488,10 +529,10 @@ const styles = StyleSheet.create({
 		color: COLORS.PRIMARY,
 		fontWeight: '600',
 	},
-	editIcon: {
-		fontSize: 24,
-		color: COLORS.PRIMARY,
-		fontWeight: '600',
+	reviewIcon: {
+		width: 24,
+		height: 24,
+		tintColor: COLORS.PRIMARY,
 	},
 	
 	// 다가오는 일정 섹션

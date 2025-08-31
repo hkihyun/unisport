@@ -410,4 +410,72 @@ export class LessonService {
       throw error;
     }
   }
+
+  // 사용자가 개설한 수업 조회 (GET /lessons/by-userId/{userId})
+  static async getLessonsByUserId(userId: number): Promise<ApiResponse<any[]>> {
+    try {
+      console.log('사용자별 수업 조회 시작:', userId);
+      const url = `https://unisportserver.onrender.com/lessons/by-userId/${userId}`;
+      console.log('요청 URL:', url);
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        mode: 'cors',
+      });
+      
+      console.log('사용자별 수업 응답 상태:', response.status);
+      console.log('응답 헤더:', response.headers);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('사용자별 수업 HTTP 오류:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      }
+      
+      // 응답 텍스트를 먼저 확인
+      const responseText = await response.text();
+      console.log('응답 텍스트:', responseText);
+      
+      // 빈 응답인 경우 빈 배열 반환
+      if (!responseText || responseText.trim() === '') {
+        console.log('빈 응답을 받았습니다. 빈 배열을 반환합니다.');
+        return {
+          success: true,
+          data: [],
+          message: '사용자가 개설한 수업이 없습니다.',
+        };
+      }
+      
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('JSON 파싱 오류:', parseError);
+        console.error('파싱할 수 없는 응답 텍스트:', responseText);
+        throw new Error('서버에서 잘못된 응답을 받았습니다.');
+      }
+      
+      console.log('사용자별 수업 응답 데이터:', data);
+      
+      // 단일 객체인 경우 배열로 변환
+      const lessonsArray = Array.isArray(data) ? data : [data];
+      
+      return {
+        success: true,
+        data: lessonsArray,
+        message: '사용자별 수업을 성공적으로 가져왔습니다.',
+      };
+    } catch (error) {
+      console.error('사용자별 수업 조회 오류:', error);
+      return {
+        success: false,
+        error: '사용자별 수업을 가져오는 중 오류가 발생했습니다.',
+        message: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.',
+      };
+    }
+  }
 }

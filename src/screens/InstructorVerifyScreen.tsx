@@ -220,7 +220,10 @@ export const InstructorVerifyScreen: React.FC<any> = ({ navigation }) => {
             ) : (
               <>
                 <View style={styles.cameraIcon}>
-                  <Text style={styles.cameraIconText}>📷</Text>
+                  <Image 
+                    source={require('../../assets/icons/PictureUpload.png')} 
+                    style={styles.uploadIcon}
+                  />
                 </View>
                 <Text style={styles.photoCount}>사진 업로드</Text>
               </>
@@ -284,13 +287,10 @@ const styles = StyleSheet.create({
   photoUploadArea: {
     width: 120,
     height: 120,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
-    borderStyle: 'dashed',
+
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#FFFFFF',
     overflow: 'hidden',
   },
   uploadedPhoto: {
@@ -301,9 +301,10 @@ const styles = StyleSheet.create({
   cameraIcon: {
     marginBottom: 8,
   },
-  cameraIconText: {
-    fontSize: 32,
-    color: '#007AFF',
+  uploadIcon: {
+    width: 80,
+    height: 80,
+    tintColor: '#007AFF',
   },
   photoCount: {
     fontSize: 14,

@@ -38,26 +38,35 @@ export const OpenLessonsScreen: React.FC<any> = ({ navigation }) => {
       setLoading(true);
       setError(null);
       
-      // LessonService.getMyLessons API 호출
-      const response = await LessonService.getMyLessons({
-        page: 1,
-        limit: 100 // 충분한 수업을 가져오기 위해 100으로 설정
-      });
+      // 새로운 API: 사용자별 수업 조회 (user.id를 number로 변환)
+      const response = await LessonService.getLessonsByUserId(parseInt(user.id));
 
       if (response.success && response.data) {
         // 백엔드 응답 데이터를 UI에 맞는 형태로 변환
-        const convertedLessons = response.data.data.map((lesson: any) => ({
-          id: lesson.id,
-          title: lesson.title,
-          lessonDate: lesson.lessonDate,
-          lessonTime: lesson.lessonTime,
-          location: lesson.location,
-          sport: lesson.sport,
-          level: lesson.level,
-          capacity: lesson.capacity,
-          reserved_count: lesson.reserved_count,
-          status: lesson.status || 'active'
-        }));
+        const convertedLessons = response.data.map((lesson: any) => {
+          // reservation_status에 따라 상태 결정
+          let status: 'active' | 'completed' | 'cancelled';
+          if (lesson.reservation_status === 'AVAILABLE') {
+            status = 'active';
+          } else if (lesson.reservation_status === 'FULL' || lesson.reservation_status === 'COMPLETED') {
+            status = 'completed';
+          } else {
+            status = 'active'; // 기본값
+          }
+
+          return {
+            id: lesson.id,
+            title: lesson.title,
+            lessonDate: lesson.lessonDate,
+            lessonTime: lesson.lessonTime,
+            location: lesson.location,
+            sport: lesson.sport,
+            level: lesson.level,
+            capacity: lesson.capacity,
+            reserved_count: lesson.reserved_count,
+            status: status
+          };
+        });
 
         setLessons(convertedLessons);
         console.log('개설한 수업 데이터:', convertedLessons);

@@ -47,6 +47,7 @@ export const PROFILE_SCREENS = {
   MY_LESSONS: 'MyLessons',
   MY_REVIEWS: 'MyReviews',
   SETTINGS: 'Settings',
+  CUSTOMER_SERVICE: 'CustomerService',
 } as const;
 
 // 수업 관련 화면
@@ -75,6 +76,7 @@ export const SCREENS = {
   ...BOOKING_SCREENS,
   ...PROFILE_SCREENS,
   ...LESSON_SCREENS,
+  SPORT_LESSONS: 'SportLessons',
 } as const;
 
 // 화면 이름 타입

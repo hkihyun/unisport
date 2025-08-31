@@ -1,6 +1,6 @@
 // React와 React Native의 핵심 컴포넌트들을 가져옵니다
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView, TextInput, StatusBar, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView, TextInput, StatusBar, Dimensions, Image } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 // React Navigation의 타입 정의를 가져옵니다
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -24,6 +24,7 @@ type RootStackParamList = {
   [SCREENS.CREATE_LESSON_INFO]: undefined;
   [SCREENS.OPEN_LESSONS]: undefined;
   [SCREENS.PAYMENT]: undefined;
+  [SCREENS.CUSTOMER_SERVICE]: undefined;
 };
 
 type RouteParams = {
@@ -275,26 +276,26 @@ export const ProfileScreen: React.FC = () => {
         {/* 강사 인증하기 메뉴 */}
         <TouchableOpacity style={styles.menuItem} onPress={handleInstructorVerification}>
           <View style={styles.menuIcon}>
-            <Text style={styles.menuIconText}>🛡️</Text> {/* 방패 이모지로 보안/인증을 나타냄 */}
+            <Image source={require('../../assets/icons/Certification.png')} style={styles.menuIconImage} />
           </View>
           <Text style={styles.menuText}>강사 인증하기</Text>
           <Text style={styles.menuArrow}>{'›'}</Text> {/* 오른쪽 화살표 */}
         </TouchableOpacity>
         
-        {/* 수업 개설하기 메뉴 - 강사 인증 완료 시 활성화됨 */}
-        <TouchableOpacity 
-          style={styles.menuItem} 
-          onPress={handleCreateLesson}
-        >
-          <View style={styles.menuIcon}>
-            <Text style={styles.menuIconText}>➕</Text> {/* 플러스 이모지로 추가/생성을 나타냄 */}
-          </View>
-          <Text style={styles.menuText}>
-            수업 개설하기 {isInstructorVerified ? '(인증완료)' : '(인증필요)'}
-          </Text>
-          <Text style={styles.menuArrow}>{'›'}
-          </Text>
-        </TouchableOpacity>
+                 {/* 수업 개설하기 메뉴 - 강사 인증 완료 시 활성화됨 */}
+         <TouchableOpacity 
+           style={styles.menuItem} 
+           onPress={handleCreateLesson}
+         >
+           <View style={styles.menuIcon}>
+             <Image source={require('../../assets/icons/MakeClass.png')} style={styles.menuIconImage} />
+           </View>
+           <Text style={styles.menuText}>
+             수업 개설하기 {isInstructorVerified ? '(인증완료)' : '(인증필요)'}
+           </Text>
+           <Text style={styles.menuArrow}>{'›'}
+           </Text>
+         </TouchableOpacity>
         
         {/* 디버깅용: 강사 인증 상태 확인 버튼 (임시) */}
         <TouchableOpacity 
@@ -320,29 +321,29 @@ export const ProfileScreen: React.FC = () => {
           </Text>
         </TouchableOpacity>
         
-        {/* 개설 수업 관리 메뉴 */}
-        <TouchableOpacity 
-          style={styles.menuItem} 
-          onPress={() => {
-            if (!isAuthenticated) {
-              Alert.alert('로그인 필요', '개설 수업을 관리하려면 먼저 로그인해주세요.');
-              return;
-            }
-            if (!isInstructorVerified) {
-              Alert.alert('강사 인증 필요', '개설 수업을 관리하려면 먼저 강사 인증을 완료해주세요.');
-              return;
-            }
-            navigation.navigate(SCREENS.OPEN_LESSONS);
-          }}
-        >
-          <View style={styles.menuIcon}>
-            <Text style={styles.menuIconText}>📁</Text> {/* 폴더 이모지로 관리/목록을 나타냄 */}
-          </View>
-          <Text style={styles.menuText}>
-            개설 수업 {isInstructorVerified ? '(인증완료)' : '(인증필요)'}
-          </Text>
-          <Text style={styles.menuArrow}>{'›'}</Text>
-        </TouchableOpacity>
+                 {/* 개설 수업 관리 메뉴 */}
+         <TouchableOpacity 
+           style={styles.menuItem} 
+           onPress={() => {
+             if (!isAuthenticated) {
+               Alert.alert('로그인 필요', '개설 수업을 관리하려면 먼저 로그인해주세요.');
+               return;
+             }
+             if (!isInstructorVerified) {
+               Alert.alert('강사 인증 필요', '개설 수업을 관리하려면 먼저 강사 인증을 완료해주세요.');
+               return;
+             }
+             navigation.navigate(SCREENS.OPEN_LESSONS);
+           }}
+         >
+           <View style={styles.menuIcon}>
+             <Image source={require('../../assets/icons/ClassMade.png')} style={styles.menuIconImage} />
+           </View>
+           <Text style={styles.menuText}>
+             개설 수업 {isInstructorVerified ? '(인증완료)' : '(인증필요)'}
+           </Text>
+           <Text style={styles.menuArrow}>{'›'}</Text>
+         </TouchableOpacity>
       </View>
 
       {/* 두 번째 메뉴 그룹: 일반 사용자 기능들 */}
@@ -356,44 +357,44 @@ export const ProfileScreen: React.FC = () => {
           <Text style={styles.menuArrow}>{'›'}</Text>
         </TouchableOpacity>
         
-        {/* UniSportsCard 구독 메뉴 */}
-        <TouchableOpacity 
-          style={styles.menuItem} 
-          onPress={() => {
-            if (!isAuthenticated) {
-              Alert.alert('로그인 필요', 'UniSportsCard를 구독하려면 먼저 로그인해주세요.');
-              return;
-            }
-            navigation.navigate(SCREENS.PAYMENT);
-          }}
-        >
-          <View style={styles.menuIcon}>
-            <Text style={styles.menuIconText}>⭐</Text> {/* 별 이모지로 프리미엄/구독을 나타냄 */}
-          </View>
-          <Text style={styles.menuText}>UniSportsCard 구독</Text>
-          <Text style={styles.menuArrow}>{'›'}</Text>
-        </TouchableOpacity>
+                 {/* UniSportsCard 구독 메뉴 */}
+         <TouchableOpacity 
+           style={styles.menuItem} 
+           onPress={() => {
+             if (!isAuthenticated) {
+               Alert.alert('로그인 필요', 'UniSportsCard를 구독하려면 먼저 로그인해주세요.');
+               return;
+             }
+             navigation.navigate(SCREENS.PAYMENT);
+           }}
+         >
+           <View style={styles.menuIcon}>
+             <Image source={require('../../assets/icons/Subscribe.png')} style={styles.menuIconImage} />
+           </View>
+           <Text style={styles.menuText}>UniSportsCard 구독</Text>
+           <Text style={styles.menuArrow}>{'›'}</Text>
+         </TouchableOpacity>
       </View>
 
       {/* 세 번째 메뉴 그룹: 설정 및 고객지원 */}
       <View style={styles.thirdMenuGroup}>
-        {/* 설정 메뉴 (현재 미구현) */}
-        <TouchableOpacity style={styles.menuItem} onPress={() => Alert.alert('설정', '설정 기능은 추후 구현 예정입니다.')}>
-          <View style={styles.menuIcon}>
-            <Text style={styles.menuIconText}>⚙️</Text> {/* 톱니바퀴 이모지로 설정을 나타냄 */}
-          </View>
-          <Text style={styles.menuText}>설정</Text>
-          <Text style={styles.menuArrow}>{'›'}</Text>
-        </TouchableOpacity>
+                 {/* 설정 메뉴 (현재 미구현) */}
+         <TouchableOpacity style={styles.menuItem} onPress={() => Alert.alert('설정', '설정 기능은 추후 구현 예정입니다.')}>
+           <View style={styles.menuIcon}>
+             <Image source={require('../../assets/icons/Setting.png')} style={styles.menuIconImage} />
+           </View>
+           <Text style={styles.menuText}>설정</Text>
+           <Text style={styles.menuArrow}>{'›'}</Text>
+         </TouchableOpacity>
         
-        {/* 고객센터 메뉴 (현재 미구현) */}
-        <TouchableOpacity style={styles.menuItem} onPress={() => Alert.alert('고객센터', '고객센터 기능은 추후 구현 예정입니다.')}>
-          <View style={styles.menuIcon}>
-            <Text style={styles.menuIconText}>🎧</Text> {/* 헤드폰 이모지로 고객지원을 나타냄 */}
-          </View>
-          <Text style={styles.menuText}>고객센터</Text>
-          <Text style={styles.menuArrow}>{'›'}</Text>
-        </TouchableOpacity>
+                                   {/* 고객센터 메뉴 */}
+          <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate(SCREENS.CUSTOMER_SERVICE)}>
+            <View style={styles.menuIcon}>
+              <Image source={require('../../assets/icons/ForCustomer.png')} style={styles.menuIconImage} />
+            </View>
+            <Text style={styles.menuText}>고객센터</Text>
+            <Text style={styles.menuArrow}>{'›'}</Text>
+          </TouchableOpacity>
       </View>
 
       {/* 로그아웃 버튼 - 로그인 상태일 때만 표시 */}
@@ -429,16 +430,28 @@ export const ProfileScreen: React.FC = () => {
       zIndex: 1, // 다른 요소들보다 뒤에 배치하되 너무 뒤에 두지 않음
     },
     
+
     // 헤더 제목 "마이" 스타일
     headerTitle: {
       position: 'absolute', // 절대 위치로 배치 (이게 없으면 left, top이 작동하지 않음)
       left: 23, // 왼쪽에서 23px 떨어진 위치
-      top: 69, // 위쪽에서 69px 떨어진 위치
+      top: 75, // 위쪽에서 69px 떨어진 위치
       color: '#FEFEFE', // 검은색 텍스트 (파란색 배경 위에서 잘 보이도록)
       fontSize: 20, // 20px 폰트 크기
       fontWeight: '600', // 세미볼드 폰트 굵기
       zIndex: 10, // 파란색 배경보다 훨씬 앞에 배치
       fontFamily: 'Normal',
+    },
+    
+    // "마이" 제목 아래 선 스타일
+    headerUnderline: {
+      position: 'absolute',
+      left: 0, // 왼쪽 끝까지
+      right: 0, // 오른쪽 끝까지
+      top: 110, // "마이" 제목 아래 위치
+      height: 1.5, // 선 두께 (2에서 1로 줄임)
+      backgroundColor: '#FEFEFE', // 흰색 선
+      zIndex: 10,
     },
     
     // 프로필 아이콘 컨테이너 스타일
@@ -555,7 +568,10 @@ export const ProfileScreen: React.FC = () => {
       borderRadius: 20, // 20px 반지름으로 모서리 둥글게
       backgroundColor: '#EDF2F8', // 연한 파란색 배경
       padding: 16, // 16px 패딩
-      marginBottom: 12, // 아래쪽에 12px 여백
+      paddingVertical: 0,
+      paddingBottom: 0,
+      marginTop: 10,
+      marginBottom: 10, // 아래쪽에 12px 여백
     },
     
     // 세 번째 메뉴 그룹 스타일 (설정 및 고객지원)
@@ -563,6 +579,8 @@ export const ProfileScreen: React.FC = () => {
       borderRadius: 20, // 20px 반지름으로 모서리 둥글게
       backgroundColor: '#EDF2F8', // 연한 파란색 배경
       padding: 16, // 16px 패딩
+      paddingVertical: 0,
+      marginTop: 10,
       marginBottom: 12, // 아래쪽에 12px 여백
     },
     
@@ -570,8 +588,9 @@ export const ProfileScreen: React.FC = () => {
     menuItem: {
       flexDirection: 'row', // 가로 방향으로 요소들을 배치
       alignItems: 'center', // 세로 중앙 정렬
-      paddingVertical: 16, // 상하 16px 패딩
-      marginBottom: 8, // 아래쪽에 8px 여백
+      paddingVertical: 0, // 상하 16px 패딩
+      marginBottom: 10, // 아래쪽에 8px 여백
+      marginTop: 10, // 위쪽에 8px 여백
       width: '100%', // 전체 너비 사용
     },
     
@@ -589,11 +608,17 @@ export const ProfileScreen: React.FC = () => {
       fontSize: 20, // 20px 폰트 크기
     },
     
+    // 메뉴 아이콘 이미지 스타일
+    menuIconImage: {
+      width: 20, // 20px 너비
+      height: 20, // 20px 높이
+    },
+    
     // 메뉴 텍스트 스타일
     menuText: {
       flex: 1, // 남은 공간을 모두 차지
-      fontSize: 18, // 18px 폰트 크기
-      fontWeight: '600', // 세미볼드 폰트 굵기
+      fontSize: 17, // 18px 폰트 크기
+      fontWeight: '700', // 세미볼드 폰트 굵기
       color: '#2B308B', // 진한 파란색 텍스트
     },
     
@@ -606,11 +631,11 @@ export const ProfileScreen: React.FC = () => {
     
     // 로그아웃 버튼 스타일
     logoutButton: {
-      backgroundColor: '#FF3B30', // 빨간색 배경 (위험한 액션을 나타냄)
+      backgroundColor: '#5981FA', // 빨간색 배경 (위험한 액션을 나타냄)
       paddingVertical: 16, // 상하 16px 패딩
       borderRadius: 16, // 16px 반지름으로 모서리 둥글게
       alignItems: 'center', // 가로 중앙 정렬
-      marginTop: 20, // 위쪽에 20px 여백
+      marginTop: 50, // 위쪽에 20px 여백
       shadowColor: '#000', // 그림자 색상
       shadowOffset: {
         width: 0, // 가로 그림자 오프셋
@@ -799,7 +824,7 @@ export const ProfileScreen: React.FC = () => {
     // 사용자 정보 표시 영역 스타일
     userInfoContainer: {
       position: 'absolute',
-      top: 240, // 프로필 아이콘 아래에 배치
+      top: 240, // 로필 아이콘 아래에 배치
       left: 20,
       right: 20,
       padding: 20,
@@ -818,7 +843,9 @@ export const ProfileScreen: React.FC = () => {
         
         {/* "마이" 제목 - 파란색 헤더 위에 표시 */}
         <Text style={styles.headerTitle}>마이</Text>
-        
+        {/* "마이" 제목 아래 선 */}
+        <View style={styles.headerUnderline} />
+
         {/* 프로필 아이콘 컨테이너 - 파란색 헤더 중앙에 배치 */}
         <View style={styles.profileIconContainer}>
           <ProfileIcon width={105} height={105} fill="#5981FA" stroke="white" />
@@ -867,6 +894,8 @@ export const ProfileScreen: React.FC = () => {
       
       {/* "마이" 제목 - 파란색 헤더 위에 표시 */}
       <Text style={styles.headerTitle}>마이</Text>
+      {/* "마이" 제목 아래 선 */}
+      <View style={styles.headerUnderline} />
       
       {/* 프로필 아이콘 컨테이너 - 파란색 헤더 중앙에 배치 */}
       <View style={styles.profileIconContainer}>

@@ -1,7 +1,8 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, Dimensions } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, Dimensions, Alert } from 'react-native';
 import { COLORS } from '../constants/colors';
 import { HeartIcon } from '../../assets/icons/HeartIcon';
+import { lessonLikeService } from '../services/lessonLikeService';
 
 const { height: screenHeight } = Dimensions.get('window');
 
@@ -18,6 +19,7 @@ type Props = {
 	onSelect: (lesson: Lesson) => void;
 	onClose: () => void;
 	visible: boolean; // 애니메이션 제어를 위한 visible prop 추가
+	userId?: number; // 사용자 ID 추가
 };
 
 export const BookingBottomSheet: React.FC<Props> = ({ 
@@ -25,9 +27,41 @@ export const BookingBottomSheet: React.FC<Props> = ({
 	lessons, 
 	onSelect, 
 	onClose, 
-	visible 
+	visible,
+	userId = 1 // 기본값 설정, 실제로는 props로 전달받아야 함
 }) => {
 	const slideAnim = useRef(new Animated.Value(screenHeight - 100)).current; // 초기값을 달력 아래에 일부 보이도록 설정
+	
+	// 각 수업별로 좋아요 상태를 관리하는 state
+	const [favoriteLessons, setFavoriteLessons] = useState<Set<string>>(new Set());
+
+	// 좋아요 토글 함수
+	const toggleFavorite = async (lessonId: string) => {
+		if (!userId) {
+			Alert.alert('오류', '사용자 정보를 찾을 수 없습니다.');
+			return;
+		}
+
+		try {
+			const lessonIdNum = parseInt(lessonId);
+			await lessonLikeService.addToFavorites(lessonIdNum, userId);
+			
+			// 성공 시 로컬 상태 업데이트
+			setFavoriteLessons(prev => {
+				const newSet = new Set(prev);
+				if (newSet.has(lessonId)) {
+					newSet.delete(lessonId);
+				} else {
+					newSet.add(lessonId);
+				}
+				return newSet;
+			});
+
+			Alert.alert('성공', '관심 레슨으로 등록되었습니다.');
+		} catch (error: any) {
+			Alert.alert('오류', error.message);
+		}
+	};
 
 	useEffect(() => {
 		if (visible) {
@@ -100,9 +134,19 @@ export const BookingBottomSheet: React.FC<Props> = ({
 									<View style={styles.cardRight}>
 										<View style={styles.cardThumb} />
 										<Text style={styles.availableText}>예약가능</Text>
-										<View style={styles.HeartIconcontainer}>
-											<HeartIcon size={30} color="#5981FA" />
-										</View>
+										<TouchableOpacity 
+											style={styles.HeartIconcontainer}
+											onPress={(e) => {
+												e.stopPropagation(); // 카드 클릭 이벤트와 분리
+												toggleFavorite(l.id);
+											}}
+										>
+											<HeartIcon 
+												size={30} 
+												color="#5981FA" 
+												filled={favoriteLessons.has(l.id)}
+											/>
+										</TouchableOpacity>
 									</View>
 								</TouchableOpacity>
 							</View>

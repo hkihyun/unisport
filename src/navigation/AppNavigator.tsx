@@ -28,6 +28,10 @@ import InstructorVerifyScreen from '../screens/InstructorVerifyScreen';
 import CreateLessonInfoScreen from '../screens/CreateLessonInfoScreen';
 import CreateLessonCompleteScreen from '../screens/CreateLessonCompleteScreen';
 import OpenLessonsScreen from '../screens/OpenLessonsScreen';
+import SubjectsInterestingScreen from '../screens/SubjectsIntereseting';
+import ReviewScreen from '../screens/ReviewScreen';
+import WriteReviewScreen from '../screens/WriteReviewScreen';
+import { CustomerServiceScreen } from '../screens/CustomerServiceScreen';
 
 // 임시 화면 컴포넌트 (아직 만들지 않은 화면들용)
 const TempScreen: React.FC<{ title: string }> = ({ title }) => (
@@ -57,6 +61,10 @@ type RootStackParamList = {
   [SCREENS.CREATE_LESSON_INFO]: undefined;
   [SCREENS.CREATE_LESSON_COMPLETE]: { title: string; date: string; time: string; place: string };
   [SCREENS.OPEN_LESSONS]: undefined;
+  [SCREENS.CUSTOMER_SERVICE]: undefined;
+  SubjectsInteresting: undefined;
+  Review: undefined;
+  WriteReview: { lessonId: number; lessonDetail: any };
 };
 
 // 탭 네비게이터 타입 정의
@@ -276,6 +284,26 @@ const AppNavigator: React.FC = () => {
             name={SCREENS.OPEN_LESSONS}
             component={OpenLessonsScreen}
             options={{ title: '개설 수업' }}
+          />
+          <Stack.Screen
+            name={SCREENS.CUSTOMER_SERVICE}
+            component={CustomerServiceScreen}
+            options={{ title: '고객센터' }}
+          />
+          <Stack.Screen
+            name="SubjectsInteresting"
+            component={SubjectsInterestingScreen}
+            options={{ title: '관심과목' }}
+          />
+          <Stack.Screen
+            name="Review"
+            component={ReviewScreen}
+            options={{ title: '리뷰쓰기' }}
+          />
+          <Stack.Screen
+            name="WriteReview"
+            component={WriteReviewScreen}
+            options={{ title: '리뷰쓰기' }}
           />
         </Stack.Navigator>
     </>

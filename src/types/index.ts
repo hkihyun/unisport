@@ -162,13 +162,18 @@ export interface BackendLesson {
 
 // 백엔드 API 수업 상세 타입 (GET /lessons/{id} 응답)
 export interface BackendLessonDetail {
-  id: number;
+  id: number | null;
   sport: string;
   title: string;
   description: string;
   level: number;
   location: string;
-  image: string | null;
+  imagePath: string | null; // API 응답과 일치하도록 image -> imagePath로 변경
+  capacity: number; // API 응답에 있는 필드 추가
+  reservedCount: number; // API 응답에 있는 필드 추가
+  reservationStatus: 'AVAILABLE' | 'FULL' | 'CLOSED'; // API 응답에 있는 필드 추가
+  isEveryWeek: number; // API 응답에 있는 필드 추가
+  dayOfTheWeek: string; // API 응답에 있는 필드 추가
   instructorUserId: number;
   lessonDate: string;
   lessonTime: string;
