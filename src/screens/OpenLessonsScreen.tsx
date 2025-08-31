@@ -5,6 +5,7 @@ import { LeftArrowBlue } from '../../assets/icons/LeftArrow_blue';
 import { LessonService } from '../services/lessonService';
 import { useAuth } from '../hooks/useAuth';
 import { COLORS } from '../constants/colors';
+import { BackendLessonDetail } from '../types';
 
 interface Lesson {
   id: number;
@@ -38,41 +39,62 @@ export const OpenLessonsScreen: React.FC<any> = ({ navigation }) => {
       setLoading(true);
       setError(null);
       
-      // 새로운 API: 사용자별 수업 조회 (user.id를 number로 변환)
+      // 백엔드 API: 사용자별 수업 조회 (GET /lessons/by-userId?userId={userId})
       const response = await LessonService.getLessonsByUserId(parseInt(user.id));
 
-      if (response.success && response.data) {
-        // 백엔드 응답 데이터를 UI에 맞는 형태로 변환
-        const convertedLessons = response.data.map((lesson: any) => {
-          // reservation_status에 따라 상태 결정
-          let status: 'active' | 'completed' | 'cancelled';
-          if (lesson.reservation_status === 'AVAILABLE') {
-            status = 'active';
-          } else if (lesson.reservation_status === 'FULL' || lesson.reservation_status === 'COMPLETED') {
-            status = 'completed';
-          } else {
-            status = 'active'; // 기본값
-          }
+             if (response.success) {
+         // 백엔드에서 성공적으로 응답했지만 데이터가 없는 경우 (수업이 없는 경우)
+         // response.data가 null, undefined이거나 빈 배열인 경우
+         if (!response.data || response.data.length === 0) {
+           setLessons([]);
+           setError(null); // 에러 상태 초기화
+           console.log('개설한 수업이 없습니다.');
+           return;
+         }
+         
+         // 백엔드 응답 데이터를 UI에 맞는 형태로 변환
+         const convertedLessons = response.data.map((lesson: BackendLessonDetail) => {
+           // schedules 배열의 첫 번째 항목에서 날짜와 시간 정보 가져오기
+           const firstSchedule = lesson.schedules && lesson.schedules.length > 0 ? lesson.schedules[0] : null;
+           
+           // 예약 상태에 따라 상태 결정
+           let status: 'active' | 'completed' | 'cancelled';
+           if (firstSchedule) {
+             if (firstSchedule.reservedCount >= firstSchedule.capacity) {
+               status = 'completed';
+             } else {
+               status = 'active';
+             }
+           } else {
+             status = 'active'; // 기본값
+           }
 
-          return {
-            id: lesson.id,
-            title: lesson.title,
-            lessonDate: lesson.lessonDate,
-            lessonTime: lesson.lessonTime,
-            location: lesson.location,
-            sport: lesson.sport,
-            level: lesson.level,
-            capacity: lesson.capacity,
-            reserved_count: lesson.reserved_count,
-            status: status
-          };
-        });
+           // schedules가 null이거나 비어있는 경우 기본값 설정
+           const lessonDate = firstSchedule ? firstSchedule.date : new Date().toISOString().split('T')[0];
+           const lessonTime = firstSchedule ? firstSchedule.startTime : '10:00:00';
+           const capacity = firstSchedule ? firstSchedule.capacity : lesson.capacity;
+           const reservedCount = firstSchedule ? firstSchedule.reservedCount : 0;
 
-        setLessons(convertedLessons);
-        console.log('개설한 수업 데이터:', convertedLessons);
-      } else {
-        setError(response.message || '수업 데이터를 불러올 수 없습니다.');
-      }
+           return {
+             id: lesson.id,
+             title: lesson.title,
+             lessonDate: lessonDate,
+             lessonTime: lessonTime,
+             location: lesson.location,
+             sport: lesson.sport,
+             level: lesson.level,
+             capacity: capacity,
+             reserved_count: reservedCount,
+             status: status
+           };
+         });
+
+         setLessons(convertedLessons);
+         console.log('개설한 수업 데이터:', convertedLessons);
+       } else {
+         // 실제 API 오류인 경우에만 에러 메시지 설정
+         setError(response.message || '수업 데이터를 불러올 수 없습니다.');
+       }
     } catch (err) {
       console.error('수업 데이터 가져오기 오류:', err);
       setError('수업 데이터를 불러오는 중 오류가 발생했습니다.');
@@ -85,59 +107,122 @@ export const OpenLessonsScreen: React.FC<any> = ({ navigation }) => {
     fetchMyLessons();
   }, [isAuthenticated, user]);
 
+  // 레슨 삭제 처리
+  const handleDeleteLesson = async (lessonId: number) => {
+    Alert.alert(
+      '레슨 삭제',
+      '정말로 이 레슨을 삭제하시겠습니까?',
+      [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '삭제',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const response = await LessonService.deleteLesson(lessonId.toString());
+              
+              if (response.success) {
+                Alert.alert('성공', '레슨이 삭제되었습니다.');
+                // 삭제된 레슨을 로컬 상태에서 제거
+                setLessons(prev => prev.filter(lesson => lesson.id !== lessonId));
+              } else {
+                Alert.alert('오류', response.message || '레슨 삭제에 실패했습니다.');
+              }
+            } catch (error) {
+              console.error('레슨 삭제 오류:', error);
+              Alert.alert('오류', '레슨 삭제 중 오류가 발생했습니다.');
+            }
+          }
+        }
+      ]
+    );
+  };
+
   // 날짜를 한국어 형식으로 변환
   const formatDate = (dateString: string) => {
     try {
+      if (!dateString || dateString.trim() === '') {
+        return '날짜 정보 없음';
+      }
       const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return '날짜 정보 없음';
+      }
       const month = date.getMonth() + 1;
       const day = date.getDate();
       const dayOfWeek = ['일', '월', '화', '수', '목', '금', '토'][date.getDay()];
       return `${month}.${day}(${dayOfWeek})`;
     } catch (error) {
-      return dateString;
+      return '날짜 정보 없음';
     }
   };
 
   // 날짜 그룹 헤더 형식
   const formatDateGroup = (dateString: string) => {
     try {
+      if (!dateString || dateString.trim() === '') {
+        return '날짜 정보 없음';
+      }
       const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return '날짜 정보 없음';
+      }
       const month = date.getMonth() + 1;
       const day = date.getDate();
       const dayOfWeek = ['일', '월', '화', '수', '목', '금', '토'][date.getDay()];
       return `${month}월 ${day}일 ${dayOfWeek}`;
     } catch (error) {
-      return dateString;
+      return '날짜 정보 없음';
     }
   };
 
-  // 시간 형식 변환
+  // 시간 형식 변환 (백엔드 API: "HH:MM:SS" 형식)
   const formatTime = (timeString: string) => {
     try {
+      if (!timeString || timeString.trim() === '') {
+        return '시간 정보 없음';
+      }
+      
+      // "HH:MM:SS" 형식을 "오전/오후 H:MM" 형식으로 변환
       const [hours, minutes] = timeString.split(':');
       const hour = parseInt(hours);
+      if (isNaN(hour)) {
+        return '시간 정보 없음';
+      }
       const period = hour < 12 ? '오전' : '오후';
       const displayHour = hour < 12 ? hour : hour - 12;
       return `${period}${displayHour}:${minutes}`;
     } catch (error) {
-      return timeString;
+      return '시간 정보 없음';
     }
   };
 
   // 탭에 따른 수업 필터링
   const filteredLessons = lessons.filter(lesson => {
-    if (activeTab === 'scheduled') {
-      // 예정된 수업: 오늘 이후의 수업
+    // 유효하지 않은 날짜는 건너뛰기
+    if (!lesson.lessonDate || lesson.lessonDate.trim() === '') {
+      return false;
+    }
+    
+    try {
       const lessonDate = new Date(lesson.lessonDate);
+      if (isNaN(lessonDate.getTime())) {
+        return false;
+      }
+      
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      return lessonDate >= today;
-    } else {
-      // 완료된 수업: 오늘 이전의 수업
-      const lessonDate = new Date(lesson.lessonDate);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      return lessonDate < today;
+      
+      if (activeTab === 'scheduled') {
+        // 예정된 수업: 오늘 이후의 수업
+        return lessonDate >= today;
+      } else {
+        // 완료된 수업: 오늘 이전의 수업
+        return lessonDate < today;
+      }
+    } catch (error) {
+      console.warn('날짜 파싱 오류:', error);
+      return false;
     }
   });
 
@@ -169,20 +254,19 @@ export const OpenLessonsScreen: React.FC<any> = ({ navigation }) => {
           {lesson.sport} • 레벨 {lesson.level} • {lesson.reserved_count}/{lesson.capacity}명
         </Text>
       </View>
-      <TouchableOpacity 
-        style={styles.optionsButton}
-        onPress={() => {
-          Alert.alert(
-            '수업 관리',
-            '수업을 수정하거나 삭제하시겠습니까?',
-            [
-              { text: '취소', style: 'cancel' },
-              { text: '수정', onPress: () => console.log('수업 수정') },
-              { text: '삭제', onPress: () => console.log('수업 삭제'), style: 'destructive' }
-            ]
-          );
-        }}
-      >
+             <TouchableOpacity 
+         style={styles.optionsButton}
+         onPress={() => {
+           Alert.alert(
+             '수업 관리',
+             '수업을 수정하거나 삭제하시겠습니까?',
+             [
+               { text: '취소', style: 'cancel' },
+               { text: '삭제', onPress: () => handleDeleteLesson(lesson.id), style: 'destructive' }
+             ]
+           );
+         }}
+       >
         <Text style={styles.optionsText}>⋯</Text>
       </TouchableOpacity>
     </View>
@@ -218,21 +302,32 @@ export const OpenLessonsScreen: React.FC<any> = ({ navigation }) => {
       );
     }
 
-    if (filteredLessons.length === 0) {
-      return (
-        <View style={styles.centerContainer}>
-          <Text style={styles.noDataText}>
-            {activeTab === 'scheduled' ? '예정된 수업이 없습니다.' : '완료된 수업이 없습니다.'}
-          </Text>
-          <Text style={styles.noDataSubtext}>
-            {activeTab === 'scheduled' 
-              ? '새로운 수업을 개설해보세요!' 
-              : '아직 완료된 수업이 없습니다.'
-            }
-          </Text>
-        </View>
-      );
-    }
+         // 사용자가 전혀 수업을 개설하지 않은 경우
+     if (lessons.length === 0) {
+       return (
+         <View style={styles.centerContainer}>
+           <Text style={styles.noDataText}>사용자가 개설한 수업이 없습니다</Text>
+           <Text style={styles.noDataSubtext}>새로운 수업을 개설해보세요!</Text>
+         </View>
+       );
+     }
+     
+     // 탭별로 필터링된 결과가 없는 경우
+     if (filteredLessons.length === 0) {
+       return (
+         <View style={styles.centerContainer}>
+           <Text style={styles.noDataText}>
+             {activeTab === 'scheduled' ? '예정된 수업이 없습니다.' : '완료된 수업이 없습니다.'}
+           </Text>
+           <Text style={styles.noDataSubtext}>
+             {activeTab === 'scheduled' 
+               ? '새로운 수업을 개설해보세요!' 
+               : '아직 완료된 수업이 없습니다.'
+             }
+           </Text>
+         </View>
+       );
+     }
 
     return (
       <ScrollView style={styles.lessonList} showsVerticalScrollIndicator={false}>

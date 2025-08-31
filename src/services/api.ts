@@ -164,6 +164,7 @@ export const API_ENDPOINTS = {
     SEARCH: '/lessons/search',
     BY_INSTRUCTOR: '/lessons/instructor',
     BY_SPORT: '/lessons/by-sport',
+    BY_USERID: '/lessons/by-userId',
   },
   
   // 예약 관련

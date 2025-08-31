@@ -1,5 +1,5 @@
 import { apiClient, API_ENDPOINTS } from './api';
-import { Lesson, ApiResponse, PaginatedResponse, PaginationParams, LessonFilters, CreateLessonRequest as BackendCreateLessonRequest, CreateLessonResponse, BackendLesson, BackendLessonDetail, BackendReviewResponse } from '../types';
+import { Lesson, ApiResponse, PaginatedResponse, PaginationParams, LessonFilters, CreateLessonRequest as BackendCreateLessonRequest, CreateLessonResponse, BackendLesson, BackendLessonDetail, BackendReview, BackendReviewResponse } from '../types';
 
 // 수업 생성 요청 데이터
 export interface CreateLessonRequest {
@@ -57,9 +57,35 @@ export class LessonService {
     return apiClient.put<Lesson>(`${API_ENDPOINTS.LESSONS.BASE}/${lessonId}`, lessonData, true);
   }
 
-  // 수업 삭제
-  static async deleteLesson(lessonId: string): Promise<ApiResponse<void>> {
-    return apiClient.delete<void>(`${API_ENDPOINTS.LESSONS.BASE}/${lessonId}`, true);
+  // 수업 삭제 (DELETE /lessons/{id})
+  static async deleteLesson(lessonId: string): Promise<ApiResponse<BackendLessonDetail>> {
+    try {
+      console.log('레슨 삭제 시작:', lessonId);
+      const response = await apiClient.delete<BackendLessonDetail>(`${API_ENDPOINTS.LESSONS.BASE}/${lessonId}`, undefined, true);
+      
+      if (response.success && response.data) {
+        console.log('레슨 삭제 성공:', response.data);
+        return {
+          success: true,
+          data: response.data,
+          message: '레슨이 성공적으로 삭제되었습니다.',
+        };
+      } else {
+        console.error('레슨 삭제 실패:', response.error);
+        return {
+          success: false,
+          error: response.error || '레슨 삭제에 실패했습니다.',
+          message: '레슨 삭제에 실패했습니다.',
+        };
+      }
+    } catch (error) {
+      console.error('레슨 삭제 오류:', error);
+      return {
+        success: false,
+        error: '레슨 삭제 중 오류가 발생했습니다.',
+        message: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.',
+      };
+    }
   }
 
   // 강사별 수업 조회
@@ -382,69 +408,44 @@ static async getReviewsByRating(lessonId: number): Promise<BackendReview[]> {
     }
   }
 
-  // 사용자가 개설한 수업 조회 (GET /lessons/by-userId/{userId})
-  static async getLessonsByUserId(userId: number): Promise<ApiResponse<any[]>> {
+  // 사용자가 개설한 수업 조회 (GET /lessons/by-userId?userId={userId})
+  static async getLessonsByUserId(userId: number): Promise<ApiResponse<BackendLessonDetail[]>> {
     try {
       console.log('사용자별 수업 조회 시작:', userId);
-      const url = `https://unisportserver.onrender.com/lessons/by-userId/${userId}`;
-      console.log('요청 URL:', url);
+      const response = await apiClient.get<BackendLessonDetail[]>(
+        `${API_ENDPOINTS.LESSONS.BY_USERID}?userId=${userId}`
+      );
       
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        mode: 'cors',
-      });
-      
-      console.log('사용자별 수업 응답 상태:', response.status);
-      console.log('응답 헤더:', response.headers);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('사용자별 수업 HTTP 오류:', errorText);
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-      }
-      
-      // 응답 텍스트를 먼저 확인
-      const responseText = await response.text();
-      console.log('응답 텍스트:', responseText);
-      
-      // 빈 응답인 경우 빈 배열 반환
-      if (!responseText || responseText.trim() === '') {
-        console.log('빈 응답을 받았습니다. 빈 배열을 반환합니다.');
+      if (response.success && response.data) {
+        console.log('사용자별 수업 응답 데이터:', response.data);
+        
+        // 백엔드에서 단일 객체를 반환하는 경우 배열로 변환
+        let lessonsArray: BackendLessonDetail[];
+        if (Array.isArray(response.data)) {
+          lessonsArray = response.data;
+        } else {
+          // 단일 객체인 경우 배열로 감싸기
+          lessonsArray = [response.data];
+        }
+        
         return {
           success: true,
-          data: [],
-          message: '사용자가 개설한 수업이 없습니다.',
+          data: lessonsArray,
+          message: '사용자별 수업을 성공적으로 가져왔습니다.',
+        };
+      } else {
+        console.error('사용자별 수업 조회 실패:', response.error);
+        return {
+          success: false,
+          error: response.error || '사용자의 수업이 존재하지않습니다.',
+          message: '사용자의 수업이 존재하지 않습니다.',
         };
       }
-      
-      let data;
-      try {
-        data = JSON.parse(responseText);
-      } catch (parseError) {
-        console.error('JSON 파싱 오류:', parseError);
-        console.error('파싱할 수 없는 응답 텍스트:', responseText);
-        throw new Error('서버에서 잘못된 응답을 받았습니다.');
-      }
-      
-      console.log('사용자별 수업 응답 데이터:', data);
-      
-      // 단일 객체인 경우 배열로 변환
-      const lessonsArray = Array.isArray(data) ? data : [data];
-      
-      return {
-        success: true,
-        data: lessonsArray,
-        message: '사용자별 수업을 성공적으로 가져왔습니다.',
-      };
     } catch (error) {
       console.error('사용자별 수업 조회 오류:', error);
       return {
         success: false,
-        error: '사용자별 수업을 가져오는 중 오류가 발생했습니다.',
+        error: '사용자의 수업이 존재하지 않습니다',
         message: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.',
       };
     }

@@ -161,8 +161,8 @@ export interface BackendLesson {
 }
 
 
-// 예시 타입
-type BackendLessonDetail = {
+// 백엔드 API 수업 상세 타입
+export type BackendLessonDetail = {
   id: number;
   sport: string;
   title: string;
@@ -185,7 +185,8 @@ type BackendLessonDetail = {
   }>;
 };
 
-type BackendReview = {
+// 백엔드 API 리뷰 타입
+export type BackendReview = {
   id: number;
   lessonId: number;
   rating: number;
