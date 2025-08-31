@@ -113,8 +113,8 @@ class ApiClient {
   }
 
   // DELETE 요청
-  async delete<T>(endpoint: string, requiresAuth: boolean = true): Promise<ApiResponse<T>> {
-    return this.request<T>(endpoint, { method: 'DELETE', requiresAuth });
+  async delete<T>(endpoint: string, body?: any, requiresAuth: boolean = true): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, { method: 'DELETE', body, requiresAuth });
   }
 
   // PATCH 요청

@@ -6,10 +6,12 @@ import { ReservationService } from '../services/reservationService';
 import { BackendLessonDetail } from '../types';
 import { Header } from '../components/Header';
 import { LeftArrowBlue } from '../../assets/icons/LeftArrow_blue';
+import { useAuth } from '../hooks/useAuth';
 const { width } = Dimensions.get('window');
 
 export const BookingConfirmScreen: React.FC<any> = ({ navigation, route }) => {
 	const { type, lessonId, reservationId, fromHome, reservation, lessonDetail: homeLessonDetail } = route.params;
+	const { user } = useAuth(); // user 정보 추가
 	const [lessonDetail, setLessonDetail] = useState<BackendLessonDetail | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
@@ -102,6 +104,23 @@ export const BookingConfirmScreen: React.FC<any> = ({ navigation, route }) => {
 
 	// 예약 취소 함수
 	const handleCancelReservation = async () => {
+		// 사용자 정보 확인
+		if (!user) {
+			Alert.alert('오류', '사용자 정보를 찾을 수 없습니다.');
+			return;
+		}
+
+		// reservation 정보에서 lessonScheduleId 가져오기
+		let targetLessonScheduleId: number;
+		if (fromHome && reservation) {
+			// 홈화면에서 온 경우: reservation 객체에서 lessonScheduleId 사용
+			targetLessonScheduleId = reservation.lessonScheduleId;
+		} else {
+			// 일반적인 경우: lessonId를 lessonScheduleId로 사용 (임시)
+			// 실제로는 reservation 정보가 필요할 수 있음
+			targetLessonScheduleId = parseInt(lessonId);
+		}
+
 		Alert.alert(
 			'예약 취소',
 			'정말로 이 수업 예약을 취소하시겠습니까?',
@@ -117,8 +136,8 @@ export const BookingConfirmScreen: React.FC<any> = ({ navigation, route }) => {
 							// 로딩 상태 표시
 							setIsLoading(true);
 							
-							// 예약 취소 API 호출
-							await ReservationService.cancelReservation(parseInt(lessonId));
+							// 예약 취소 API 호출 (userId와 lessonScheduleId 전달)
+							await ReservationService.cancelReservation(parseInt(user.id), targetLessonScheduleId);
 							
 							// 성공 메시지 표시
 							Alert.alert(
@@ -205,31 +224,31 @@ export const BookingConfirmScreen: React.FC<any> = ({ navigation, route }) => {
 				<View style={styles.bottomSpacing} />
 			</ScrollView>
 			
-			{/* 하단 고정 버튼 */}
-			<View style={styles.bottomButtonContainer}>
-				{fromHome ? (
-					// 홈화면에서 온 경우: 예약취소 버튼
-					<TouchableOpacity 
-						style={styles.primaryButton}
-						onPress={handleCancelReservation}
-					>
-						<Text style={styles.primaryButtonText}>예약취소</Text>
-					</TouchableOpacity>
-				) : (
-					// 일반적인 경우: 홈으로 이동 버튼
-					<TouchableOpacity 
-						style={styles.primaryButton}
-						onPress={() => {
-							// 홈 화면으로 이동
-							navigation.navigate('Home');
-						}}
-					>
-						<Text style={styles.primaryButtonText}>
-							{type === 'book' ? '홈으로 이동' : '관심등록확인'}
-						</Text>
-					</TouchableOpacity>
-				)}
-			</View>
+					{/* 하단 고정 버튼 */}
+		<View style={styles.bottomButtonContainer}>
+			{fromHome && reservation ? (
+				// 홈화면에서 온 경우: 예약취소 버튼 (reservation 정보가 있을 때만)
+				<TouchableOpacity 
+					style={styles.primaryButton}
+					onPress={handleCancelReservation}
+				>
+					<Text style={styles.primaryButtonText}>예약취소</Text>
+				</TouchableOpacity>
+			) : (
+				// 일반적인 경우: 홈으로 이동 버튼
+				<TouchableOpacity 
+					style={styles.primaryButton}
+					onPress={() => {
+						// 홈 화면으로 이동
+						navigation.navigate('Home');
+					}}
+				>
+					<Text style={styles.primaryButtonText}>
+						{type === 'book' ? '홈으로 이동' : '관심등록확인'}
+					</Text>
+				</TouchableOpacity>
+			)}
+		</View>
 		</View>
 	);
 };

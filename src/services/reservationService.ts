@@ -71,12 +71,19 @@ export class ReservationService {
     }
   }
 
-  // 예약 취소 (lessonId로)
-  static async cancelReservation(lessonId: number): Promise<any> {
+  // 예약 취소 (userId와 lessonScheduleId로)
+  static async cancelReservation(userId: number, lessonScheduleId: number): Promise<any> {
     try {
-      console.log('Canceling reservation with lessonId:', lessonId);
+      console.log('Canceling reservation with userId:', userId, 'lessonScheduleId:', lessonScheduleId);
+      
+      const requestBody = {
+        userId: userId,
+        lessonScheduleId: lessonScheduleId
+      };
+      
       const response = await apiClient.delete<any>(
-        `${API_ENDPOINTS.RESERVATIONS.BASE}?lessonId=${lessonId}`,
+        API_ENDPOINTS.RESERVATIONS.BASE,
+        requestBody,
         false // 인증이 필요하지 않음
       );
 
