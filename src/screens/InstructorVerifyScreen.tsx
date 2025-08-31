@@ -182,8 +182,16 @@ export const InstructorVerifyScreen: React.FC<any> = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="white" />
-      <Header title="강사 인증" showLogo={true} customIcon={<LeftArrowBlue width={32} height={32} />} />
-
+      {/* 네비게이션 헤더 */}
+      <Header 
+        title="로그인" 
+        showLogo={true} 
+        customIcon={
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <LeftArrowBlue width={32} height={32} />
+          </TouchableOpacity>
+        } 
+      />
       {/* 폼 필드들 */}
       <View style={styles.formContainer}>
         {/* 이름 필드 */}
