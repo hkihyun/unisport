@@ -15,9 +15,9 @@ export const BookingConfirmScreen: React.FC<any> = ({ navigation, route }) => {
 	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
-		// 홈화면에서 온 경우 이미 수업 정보가 있음
-		if (fromHome && homeLessonDetail) {
-			setLessonDetail(homeLessonDetail);
+		// 홈화면에서 온 경우 또는 이미 수업 정보가 전달된 경우
+		if ((fromHome && homeLessonDetail) || route.params.lessonDetail) {
+			setLessonDetail(fromHome ? homeLessonDetail : route.params.lessonDetail);
 			setIsLoading(false);
 			return;
 		}
@@ -39,7 +39,7 @@ export const BookingConfirmScreen: React.FC<any> = ({ navigation, route }) => {
 		if (lessonId) {
 			fetchLessonDetail();
 		}
-	}, [lessonId, fromHome, homeLessonDetail]);
+	}, [lessonId, fromHome, homeLessonDetail, route.params.lessonDetail]);
 
 	// 로딩 중일 때
 	if (isLoading) {
@@ -64,7 +64,12 @@ export const BookingConfirmScreen: React.FC<any> = ({ navigation, route }) => {
 	}
 
 	// 날짜와 시간 포맷팅
-	const formatDate = (dateString: string) => {
+	const formatDate = (dateString: string | undefined) => {
+		// dateString이 undefined인 경우 처리
+		if (!dateString) {
+			return '날짜 정보 없음';
+		}
+		
 		const date = new Date(dateString);
 		const month = date.getMonth() + 1;
 		const day = date.getDate();
@@ -72,7 +77,12 @@ export const BookingConfirmScreen: React.FC<any> = ({ navigation, route }) => {
 		return `${month}.${day}(${dayOfWeek})`;
 	};
 
-	const formatTime = (timeString: string) => {
+	const formatTime = (timeString: string | undefined) => {
+		// timeString이 undefined인 경우 처리
+		if (!timeString) {
+			return '시간 정보 없음';
+		}
+		
 		// "02:00:00" 형식을 "오후 2:30" 형식으로 변환
 		const [hours, minutes] = timeString.split(':');
 		const hour = parseInt(hours);
@@ -86,6 +96,9 @@ export const BookingConfirmScreen: React.FC<any> = ({ navigation, route }) => {
 			return `오후 ${hour - 12}:${minute.toString().padStart(2, '0')}`;
 		}
 	};
+
+	// 첫 번째 스케줄 정보 가져오기
+	const firstSchedule = lessonDetail.schedules && lessonDetail.schedules.length > 0 ? lessonDetail.schedules[0] : null;
 
 	// 예약 취소 함수
 	const handleCancelReservation = async () => {
@@ -156,7 +169,7 @@ export const BookingConfirmScreen: React.FC<any> = ({ navigation, route }) => {
 				<View style={styles.lessonCard}>
 					<Text style={styles.lessonTitle}>{lessonDetail.title}</Text>
 					<Text style={styles.lessonSchedule}>
-						일정 {formatDate(lessonDetail.lessonDate)} {formatTime(lessonDetail.lessonTime)}
+						일정 {firstSchedule ? formatDate(firstSchedule.date) : '날짜 정보 없음'} {firstSchedule ? formatTime(firstSchedule.startTime) : '시간 정보 없음'}
 					</Text>
 					<Text style={styles.instructorName}>강사 정보</Text>
 					<View style={styles.locationRow}>

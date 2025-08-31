@@ -133,7 +133,8 @@ export const BookingDetailScreen: React.FC<any> = ({ navigation, route }) => {
 			navigation.navigate('BookingConfirm', {
 				type: 'book',
 				lessonId: lessonDetail.id,
-				reservationId: response.id
+				reservationId: response.id,
+				lessonDetail: lessonDetail // 전체 수업 정보 전달
 			});
 		} catch (error) {
 			console.error('예약 실패:', error);
